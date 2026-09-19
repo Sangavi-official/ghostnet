@@ -38,13 +38,15 @@ mutation_history = []
 
 def _mqtt_client(client_id=""):
     """
-    paho-mqtt 2.x requires the callback API version explicitly; 1.x does
-    not have the enum at all. This keeps both working and silences the
-    DeprecationWarning.
+    Build a paho client across paho-mqtt 1.x and 2.x.
+
+    paho 2.x deprecates the v1 callback API; v2 adds `properties` to
+    on_connect and passes a ReasonCode instead of an int rc. The
+    callbacks below take those as optional trailing arguments, so the
+    same function works under either API and no warning is emitted.
     """
     try:
-        ver = mqtt.CallbackAPIVersion.VERSION1
-        return mqtt.Client(ver, client_id) if client_id else mqtt.Client(ver)
+        return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id or None)
     except AttributeError:
         return mqtt.Client(client_id) if client_id else mqtt.Client()
 
@@ -144,7 +146,7 @@ def wait_for_topic(topic, host=None, port=None, timeout=20):
     port = port or ledger.get_config("broker_port", cfg.MQTT_PORT)
     seen = {"ok": False}
 
-    def on_message(c, u, msg):
+    def on_message(c, u, msg, properties=None):
         seen["ok"] = True
 
     c = _mqtt_client("ghostnet-verify")
@@ -215,7 +217,7 @@ def _write_broker_conf(port, ws_port=None):
     return _ssh_run(cmd, timeout=25)
 
 
-def restart_broker_with_new_port(new_port=None):
+def restart_broker_with_new_port(new_port=None, announce=True, grace=5.0):
     """
     Action 3 — broker listener hop, done safely:
       1. open the target port in the Security Group FIRST
@@ -245,6 +247,27 @@ def restart_broker_with_new_port(new_port=None):
     entry = ledger.record("iot", "rotate_iot_ip", cfg.EC2_HOST,
                           old_port, new_port, config_key="broker_port")
 
+    # ── Relocation notice ───────────────────────────────────────────
+    # The control channel runs ON the broker, so the broker cannot
+    # announce its own move after the fact. Devices are told on the OLD
+    # listener, with a grace period, BEFORE the hop. Without this the
+    # infrastructure mutation succeeds while severing patient telemetry.
+    if announce:
+        try:
+            n = _mqtt_client("ghostnet-control")
+            n.connect(cfg.EC2_HOST, old_port, 60)
+            n.publish(cfg.CONTROL_TOPIC, json.dumps({
+                "action": "broker_move", "new_port": new_port, "grace": grace}),
+                qos=1)
+            time.sleep(1)
+            n.disconnect()
+            print(f"  [IOT] relocation notice sent on :{old_port} "
+                  f"-> :{new_port} (grace {grace}s)")
+        except Exception as e:
+            print(f"  [IOT] relocation notice failed ({e}) — "
+                  f"devices may not follow the move")
+        time.sleep(grace)
+
     # 2 + 3. apply, then verify against ss(8)
     try:
         _write_broker_conf(new_port)
@@ -262,8 +285,15 @@ def restart_broker_with_new_port(new_port=None):
                 close_port(old_port)
         except Exception:
             pass
-        return log_mutation("rotate_iot_ip",
-                            f"broker {old_port} -> {new_port} | listening: {listening}", True)
+        # Did the DEVICE follow? Infrastructure moving is not the same as
+        # telemetry surviving -- this is the availability measurement.
+        topic = ledger.get_config("telemetry_topic", cfg.TELEMETRY_TOPIC)
+        t0 = time.time()
+        resumed = wait_for_topic(topic, port=new_port, timeout=30)
+        gap = time.time() - t0
+        detail = (f"broker {old_port} -> {new_port} | listening: {listening} | "
+                  f"telemetry {'RESUMED in %.1fs' % gap if resumed else 'NOT RESUMED in 30s'}")
+        return log_mutation("rotate_iot_ip", detail, True)
 
     # 4. rollback
     print("  [IOT] verification FAILED — restoring previous broker config")
@@ -305,8 +335,9 @@ if __name__ == "__main__":
     if "--topic" in sys.argv:
         rotate_iot_topic()
     elif "--port-hop" in sys.argv:
-        restart_broker_with_new_port()
+        # --no-announce reproduces the NAIVE hop, for the before/after result
+        restart_broker_with_new_port(announce="--no-announce" not in sys.argv)
     else:
-        print("  Usage: python iot_mutator.py --topic | --port-hop")
+        print("  Usage: python iot_mutator.py --topic | --port-hop [--no-announce]")
         print("  (no mutation performed — this module no longer acts on import)")
     ledger.summary()

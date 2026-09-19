@@ -246,12 +246,26 @@
       "verified": true,
       "rolled_back": false,
       "config_key": "test_port"
+    },
+    {
+      "id": 20,
+      "timestamp": "2026-09-19T16:42:15.460005+00:00",
+      "epoch": 1789836135.46,
+      "domain": "iot",
+      "action": "rotate_iot_ip",
+      "target": "13.206.71.17",
+      "old_value": 1883,
+      "new_value": 8319,
+      "verified": true,
+      "rolled_back": false,
+      "config_key": "broker_port"
     }
   ],
   "config": {
     "cloud_tag": "ip-409723",
     "api_path": "/x49cv53hc/clinical",
     "test_port": 8905,
-    "telemetry_topic": "hospital/icu/vitals/p45ly99"
+    "telemetry_topic": "hospital/icu/vitals/p45ly99",
+    "broker_port": 1883
   }
 }
