@@ -106,7 +106,19 @@ def open_port(port=8080):
         return log_mutation("open_port", f"{error_code}: {e}", False)
     except Exception as e:
         return log_mutation("open_port", str(e), False)
-
+    
+def rotate_port(old_port=8080, new_port=None):
+    """Real, VISIBLE AWS mutation: close one port, open a new random one.
+       The security group's open-ports list changes — verifiable in the console."""
+    import random
+    if new_port is None:
+        new_port = random.randint(8000, 8999)
+    open_port(new_port)      # open the new port first (never fully close the surface)
+    close_port(old_port)     # then close the old one
+    ports_now = get_current_rules()
+    return log_mutation("rotate_port",
+                        f"{old_port} -> {new_port} | open ports now: {ports_now}",
+                        True)
 
 def rotate_api_path():
     """Generates a new API endpoint path mapping (AESM)."""
@@ -189,3 +201,6 @@ if __name__ == "__main__":
     print(f"  Final open ports     : {get_current_rules()}")
     print("  Verify in AWS Console -> EC2 -> Security Groups")
     print("=" * 55)
+print("Before:", get_current_rules())
+rotate_port(8080)
+print("After:", get_current_rules())

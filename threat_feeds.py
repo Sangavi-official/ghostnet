@@ -140,7 +140,7 @@ def get_abuse_score():
         r      = requests.get(url, headers=headers,
                                params=params, timeout=10)
         count  = len(r.json().get("data", []))
-        score  = round(min(1.0, count / 10000), 3)
+        score  = round(min(1.0, count / 1000), 3)
         print(f"  [AbuseIPDB] {count} malicious IPs active -> {score}")
         return score
     except Exception as e:
