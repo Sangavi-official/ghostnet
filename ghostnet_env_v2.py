@@ -132,12 +132,23 @@ class GhostNetEnvV2(gym.Env):
         # Either way the mutated surface is brought down to a low
         # (safe) exposure value.
         # ---------------------------------------------------------------
-        if traffic_load > 0.5:
-            new_state[action] = np.random.uniform(0.1, 0.25)
-            connection_safe   = True
+        connection_safe = True
+        post_value = (np.random.uniform(0.1, 0.25) if traffic_load > 0.5
+                      else np.random.uniform(0.0, 0.15))
+
+        if action <= 4:
+            # Targeted mutation: this one surface is moved to a safe value.
+            new_state[action] = post_value
         else:
-            new_state[action] = np.random.uniform(0.0, 0.15)
-            connection_safe   = True
+            # BUGFIX: action 5 is update_firewall, a BROAD defensive move.
+            # Previously this line wrote post_value into new_state[5], which
+            # is the live CVE score -- corrupting a threat-feed dimension and
+            # letting the broad action collect reward without reducing any
+            # exposure at all. A firewall update now applies a modest
+            # reduction across ALL five attack surfaces, which is what the
+            # action actually means, and leaves the feeds untouched.
+            for i in range(5):
+                new_state[i] = max(0.0, float(new_state[i]) - 0.15)
 
         # ---------------------------------------------------------------
         # CORE REWARD (threat-aware):
