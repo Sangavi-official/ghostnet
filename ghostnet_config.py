@@ -44,6 +44,15 @@ PROTECTED_PORTS    = {22, 443, MQTT_PORT, MQTT_WS_PORT}
 
 CIDR = os.getenv("GHOSTNET_CIDR", "0.0.0.0/0")   # lab only; scope this for real use
 
+# ─── Broker relocation interlock ────────────────────────────────────
+# Moving the broker relocates the rendezvous point for EVERY device on
+# the network. In a 20-step agent loop that is self-inflicted denial of
+# service: each hop costs a telemetry outage, and devices that cannot
+# follow are stranded. It is a controlled experiment, not a routine
+# defensive action, so it is DISABLED unless explicitly enabled:
+#     $env:GHOSTNET_ALLOW_BROKER_HOP = "1"
+ALLOW_BROKER_HOP = os.getenv("GHOSTNET_ALLOW_BROKER_HOP", "0") == "1"
+
 
 def describe():
     print("  " + "-" * 58)
@@ -51,6 +60,7 @@ def describe():
     print(f"  ec2    {EC2_USER}@{EC2_HOST}")
     print(f"  key    {KEY_PATH}")
     print(f"  mutable ports {MUTABLE_PORT_RANGE} | protected {sorted(PROTECTED_PORTS)}")
+    print(f"  broker hop: {'ENABLED' if ALLOW_BROKER_HOP else 'disabled (experiment only)'}")
     print("  " + "-" * 58)
 
 

@@ -1,0 +1,56 @@
+{
+  "no_defence": {
+    "policy": "Static (no defence)",
+    "mean_reward": 0.0,
+    "mean_peak_exposure": 0.9907,
+    "pct_steps_critical": 1.0,
+    "kill_chain_coverage": 0.0,
+    "kill_chain_precision": 0.0,
+    "mean_mutations": 0.0
+  },
+  "random": {
+    "policy": "Random mutation",
+    "mean_reward": -11.67,
+    "mean_peak_exposure": 0.7674,
+    "pct_steps_critical": 0.587,
+    "kill_chain_coverage": 0.6556,
+    "kill_chain_precision": 0.1759,
+    "mean_mutations": 54.0
+  },
+  "round_robin": {
+    "policy": "Round-robin MTD",
+    "mean_reward": -6.53,
+    "mean_peak_exposure": 0.7631,
+    "pct_steps_critical": 0.5296,
+    "kill_chain_coverage": 0.8889,
+    "kill_chain_precision": 0.1778,
+    "mean_mutations": 54.0
+  },
+  "ppo_collapsed": {
+    "policy": "PPO collapsed (baseline)",
+    "mean_reward": -13.47,
+    "mean_peak_exposure": 0.9833,
+    "pct_steps_critical": 1.0,
+    "kill_chain_coverage": 0.1222,
+    "kill_chain_precision": 0.1222,
+    "mean_mutations": 54.0
+  },
+  "ppo_ghostnet": {
+    "policy": "PPO GhostNet (smart)",
+    "mean_reward": -5.33,
+    "mean_peak_exposure": 0.7497,
+    "pct_steps_critical": 0.5129,
+    "kill_chain_coverage": 0.8222,
+    "kill_chain_precision": 0.6889,
+    "mean_mutations": 54.0
+  },
+  "oracle": {
+    "policy": "Oracle (most-exposed)",
+    "mean_reward": -3.85,
+    "mean_peak_exposure": 0.748,
+    "pct_steps_critical": 0.5,
+    "kill_chain_coverage": 0.8778,
+    "kill_chain_precision": 0.75,
+    "mean_mutations": 54.0
+  }
+}

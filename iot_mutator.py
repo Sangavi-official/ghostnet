@@ -217,7 +217,7 @@ def _write_broker_conf(port, ws_port=None):
     return _ssh_run(cmd, timeout=25)
 
 
-def restart_broker_with_new_port(new_port=None, announce=True, grace=5.0):
+def restart_broker_with_new_port(new_port=None, announce=True, grace=5.0, force=False):
     """
     Action 3 — broker listener hop, done safely:
       1. open the target port in the Security Group FIRST
@@ -227,6 +227,15 @@ def restart_broker_with_new_port(new_port=None, announce=True, grace=5.0):
     Without step 4 a failed hop strands the broker behind the firewall
     and all patient telemetry stops.
     """
+    if not cfg.ALLOW_BROKER_HOP and not force:
+        # Interlock: see ghostnet_config.ALLOW_BROKER_HOP. Reported as a
+        # skipped action, not a failure -- refusing an unsafe mutation is
+        # correct behaviour, not a fault.
+        return log_mutation("rotate_iot_ip",
+                            "SKIPPED: broker relocation disabled "
+                            "(set GHOSTNET_ALLOW_BROKER_HOP=1 for the experiment)",
+                            True)
+
     lo, hi = cfg.MUTABLE_PORT_RANGE
     old_port = ledger.get_config("broker_port", cfg.MQTT_PORT)
     if new_port is None:
@@ -336,7 +345,8 @@ if __name__ == "__main__":
         rotate_iot_topic()
     elif "--port-hop" in sys.argv:
         # --no-announce reproduces the NAIVE hop, for the before/after result
-        restart_broker_with_new_port(announce="--no-announce" not in sys.argv)
+        # --port-hop IS the controlled experiment, so it forces past the interlock
+        restart_broker_with_new_port(announce="--no-announce" not in sys.argv, force=True)
     else:
         print("  Usage: python iot_mutator.py --topic | --port-hop [--no-announce]")
         print("  (no mutation performed — this module no longer acts on import)")
