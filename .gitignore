@@ -45,3 +45,10 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+*.pem
+mutation_ledger.json
+mutation_ledger.json.tmp
+dashboard/events.jsonl
+ledger_selftest.json
+__pycache__/
