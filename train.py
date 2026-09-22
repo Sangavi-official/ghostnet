@@ -57,15 +57,15 @@ model = PPO(
     n_steps=2048,
     batch_size=64,
     gamma=0.99,
-    ent_coef=0.01
+    ent_coef=0.02
 )
 
 print("  Training started.\n")
 model.learn(total_timesteps=100_000, callback=eval_cb)
-model.save("ghostnet_final")
+model.save("ghostnet_smart")
 
 print("\n" + "=" * 55)
 print("  Training complete.")
-print("  Saved : ghostnet_final.zip")
+print("  Saved : ghostnet_smart.zip")
 print("  Best  : best_model/best_model.zip")
 print("=" * 55)

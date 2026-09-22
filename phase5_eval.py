@@ -1,240 +1,213 @@
 """
-phase5_eval.py — GhostNet Phase 5: Adversarial Evaluation
-==========================================================
-Works with YOUR existing codebase:
-  - ghostnet_env_v3.py  (GhostNetEnvV3)
-  - ghostnet_env_v2.py  (GhostNetEnvV2)
-  - p3_cloud_mutator.py
-  - iot_mutator.py
-  - threat_feeds.py
+phase5_eval.py — GhostNet Phase 5: Adversarial Evaluation (corrected)
+======================================================================
+Evaluates the defence policy against a staged ATT&CK kill chain.
 
-Runs 3 scenarios × 10 episodes and saves phase5_results.json.
+WHAT CHANGED AND WHY
+  1. MODEL_PATH was best_model/best_model.zip, falling back to
+     ghostnet_final.zip -- both are the COLLAPSED policy (one action for
+     every state). Now defaults to ghostnet_smart.zip.
+  2. The "static defence" baseline used action 0, which is
+     rotate_cloud_ip -- a real mutation. It is now a true no-defence
+     control: surfaces are never reduced.
+  3. mutation_ct counted `action != 0`, silently discarding every
+     action-0 mutation. All six actions now count.
+  4. attack_success_rate tested obs[11] as "ransomware risk". Index 11
+     is attck_score. Attack pressure is now measured on the five real
+     attack surfaces (indices 0-4).
+  5. The kill chain advanced on WALL-CLOCK time in a background thread
+     while env steps ran at CPU speed, so stage alignment varied run to
+     run. Stages now advance on STEP COUNT: deterministic and
+     reproducible.
+  6. Evaluation runs OFFLINE by default. The previous configuration
+     (3 scenarios x 10 episodes x 200 steps, use_real_cloud=True) meant
+     ~6000 live AWS calls. Real-infrastructure behaviour is demonstrated
+     separately by run_phase3.py.
 
 Run:
-    python phase5_eval.py
+    python phase5_eval.py                  # offline, reproducible
+    python phase5_eval.py --live-feeds     # real threat feeds
 """
 
 import json
-import time
-import threading
+import sys
+
 import numpy as np
-from pathlib import Path
 from stable_baselines3 import PPO
-from caldera_bridge import CalderaBridge
 
-# ── Config ────────────────────────────────────────────────────────────────────
-MODEL_PATH   = "best_model/best_model.zip"
-NUM_EPISODES = 10
-MAX_STEPS    = 200
-RESULTS_FILE = "phase5_results.json"
-TTP_INTERVAL = 5.0   # seconds between each kill-chain stage
+from caldera_ttp_map import (KILL_CHAIN, TTP_BOOST_MAP, TTP_NAMES,
+                             STATE_LABELS, apply_injection, expected_action)
+from ghostnet_env_v2 import GhostNetEnvV2
+
+STAGE_STEPS   = 6            # env steps per kill-chain stage
+HALF_LIFE     = 12.0         # steps for a TTP's influence to halve
+NUM_EPISODES  = 10
+RESULTS_FILE  = "phase5_results.json"
+SURFACES      = slice(0, 5)
+CRITICAL      = 0.70
+
+ACTION_NAMES = ["rotate_cloud_ip", "close_open_port", "rotate_api_path",
+                "rotate_iot_ip", "rotate_mqtt_topic", "update_firewall"]
 
 
-# ── Load environment ──────────────────────────────────────────────────────────
+def injection_at(step):
+    """Accumulated, step-decayed boosts from every TTP fired so far."""
+    stage_now = min(step // STAGE_STEPS, len(KILL_CHAIN) - 1)
+    inj = {}
+    for k in range(stage_now + 1):
+        age = step - k * STAGE_STEPS
+        decay = 0.5 ** (age / HALF_LIFE)
+        if decay < 0.05:
+            continue
+        for dim, boost in TTP_BOOST_MAP[KILL_CHAIN[k]].items():
+            if dim == 9:
+                continue
+            inj[dim] = min(1.0, inj.get(dim, 0.0) + boost * decay)
+    return inj, KILL_CHAIN[stage_now]
 
-def make_env():
+
+def stage_scores(step_log):
     """
-    Load GhostNetEnvV3 — your actual production environment.
-    use_real_iot=False  → skips SSH to EC2 during eval (safe for Phase 5)
-    use_real_cloud=True → real AWS SG mutations still happen via boto3
-    Set use_real_cloud=False if you want a fully offline eval run.
+    Two measures per stage:
+      hit       -- did the agent EVER take the correct action in the stage?
+      precision -- what SHARE of its actions in that stage were correct?
+
+    `hit` alone flatters any cycling policy: round-robin visits all five
+    actions inside a six-step stage, so it scores near-perfect without
+    responding to the attack at all. Precision separates targeting from
+    exhaustive cycling.
     """
-    from ghostnet_env_v3 import GhostNetEnvV3
-    print("[ENV] Loading GhostNetEnvV3...")
-    env = GhostNetEnvV3(
-        use_live_feeds=True,   # NIST / Shodan / AbuseIPDB / ATT&CK still active
-        use_real_cloud=True,   # Real AWS SG mutations
-        use_real_iot=False     # Skip SSH IoT mutations (EC2 SSH not needed for eval)
-    )
-    print("[ENV] GhostNetEnvV3 ready")
-    return env
+    rows, correct, precisions = [], 0, []
+    for k, ttp in enumerate(KILL_CHAIN):
+        want = expected_action(TTP_BOOST_MAP[ttp])
+        taken = [s["action"] for s in step_log
+                 if s["stage"] == k and s["action"] is not None]
+        hit = want is not None and want in taken
+        prec = (sum(a == want for a in taken) / len(taken)) if taken and want is not None else 0.0
+        correct += hit
+        precisions.append(prec)
+        rows.append({"stage": k, "ttp": ttp, "name": TTP_NAMES[ttp],
+                     "expected": want, "taken": taken,
+                     "hit": bool(hit), "precision": round(prec, 3)})
+    return rows, correct, float(np.mean(precisions)) if precisions else 0.0
 
 
-# ── Apply CALDERA threat injection to observation ─────────────────────────────
-
-def apply_injection(obs: np.ndarray, injection: dict) -> np.ndarray:
+def run_policy(label, pick, episodes, live_feeds, seed=0, static=False):
     """
-    Overlay CALDERA attack boosts onto the raw environment observation.
-    Each active TTP boosts specific threat dimensions in the 12-dim state.
+    static=True is the true no-defence control: the attack proceeds and
+    no surface is ever mutated.
     """
-    obs_copy = obs.copy().astype(np.float32)
-    for dim_idx, boost in injection.items():
-        if dim_idx < len(obs_copy):
-            obs_copy[dim_idx] = min(1.0, float(obs_copy[dim_idx]) + boost)
-    return obs_copy
+    env = GhostNetEnvV2(use_live_feeds=live_feeds)
+    rng = np.random.default_rng(seed)
+    total_steps = len(KILL_CHAIN) * STAGE_STEPS
+    eps = []
 
+    for ep in range(episodes):
+        obs, _ = env.reset(seed=int(rng.integers(1e6)))
+        ep_reward, mutations, log = 0.0, 0, []
 
-# ── Run one scenario ──────────────────────────────────────────────────────────
+        for step in range(total_steps):
+            inj, ttp = injection_at(step)
+            obs_inj = np.array(apply_injection(obs, inj), dtype=np.float32)
+            surfaces = obs_inj[SURFACES]
 
-def run_scenario(name, env, model, bridge, attack_active, num_ep, max_steps):
-    print(f"\n{'='*50}")
-    print(f"SCENARIO: {name.upper()} | attack={attack_active}")
-    print(f"{'='*50}")
-
-    all_episodes = []
-
-    for ep in range(num_ep):
-        obs, _ = env.reset()
-        bridge.reset()
-
-        # Start CALDERA kill-chain in background thread
-        attack_thread = None
-        if attack_active:
-            attack_thread = threading.Thread(
-                target=bridge.simulate_attack_sequence,
-                kwargs={"delay_seconds": TTP_INTERVAL},
-                daemon=True
-            )
-            attack_thread.start()
-
-        ep_reward   = 0.0
-        step_log    = []
-        ttp_seen    = set()
-        mutation_ct = 0
-
-        for step in range(max_steps):
-            injection = bridge.get_threat_injection() if attack_active else {}
-            ttp_seen.update(bridge.get_active_ttps())
-
-            obs_injected = apply_injection(obs, injection)
-
-            if model is not None:
-                action, _ = model.predict(obs_injected, deterministic=True)
+            if static:
+                action = None
+                # No mutation. Only the environment's own drift applies.
+                obs = obs.copy()
+                obs[8] = min(1.0, obs[8] + rng.uniform(0, 0.03))
+                reward = 0.0
             else:
-                action = np.array([0])   # static: do nothing
+                action = int(pick(obs_inj, rng))
+                mutations += 1
+                obs, reward, done, _, _ = env.step(action)
 
-            if int(action) != 0:
-                mutation_ct += 1
-
-            obs, reward, terminated, truncated, info = env.step(action)
             ep_reward += float(reward)
+            log.append({"step": step, "stage": step // STAGE_STEPS, "ttp": ttp,
+                        "action": action,
+                        "peak_surface": float(surfaces.max()),
+                        "mean_surface": float(surfaces.mean())})
 
-            step_log.append({
-                "step":        step,
-                "reward":      float(reward),
-                "action":      int(action),
-                "injection":   {str(k): round(float(v), 3) for k, v in injection.items()},
-                "active_ttps": bridge.get_active_ttps(),
-                "obs":         obs_injected.tolist(),
-            })
+        rows, correct, prec = stage_scores(log)
+        peaks = [s["peak_surface"] for s in log]
+        eps.append({
+            "episode": ep,
+            "episode_reward": round(ep_reward, 2),
+            "mutations": mutations,
+            "mean_peak_exposure": round(float(np.mean(peaks)), 4),
+            "pct_steps_critical": round(float(np.mean([p > CRITICAL for p in peaks])), 4),
+            "stages_correct": correct,
+            "stage_precision": round(prec, 4),
+            "stage_detail": rows,
+        })
 
-            if terminated or truncated:
-                break
-
-        if attack_thread:
-            attack_thread.join(timeout=5.0)
-
-        ep_data = {
-            "episode":        ep,
-            "episode_reward": ep_reward,
-            "steps":          len(step_log),
-            "mutations":      mutation_ct,
-            "ttp_sequence":   list(ttp_seen),
-            "step_log":       step_log,
-        }
-        all_episodes.append(ep_data)
-        print(f"  Episode {ep+1:2d}/{num_ep} → reward={ep_reward:7.2f} | "
-              f"mutations={mutation_ct} | TTPs={len(ttp_seen)}")
-
-    return all_episodes
-
-
-# ── Summary stats ─────────────────────────────────────────────────────────────
-
-def summarize(episodes):
-    rewards   = [e["episode_reward"] for e in episodes]
-    mutations = [e["mutations"] for e in episodes]
-
-    # Attack success = fraction of steps where ransomware dim (11) > 0.5
-    high_risk = total = 0
-    mttd_list = []
-    for ep in episodes:
-        for s in ep["step_log"]:
-            total += 1
-            if len(s["obs"]) > 11 and s["obs"][11] > 0.5:
-                high_risk += 1
-        # MTTD: first step where agent mutated AND attack was active
-        for s in ep["step_log"]:
-            if s["action"] != 0 and len(s["active_ttps"]) > 0:
-                mttd_list.append(s["step"])
-                break
-
-    return {
-        "mean_reward":         round(float(np.mean(rewards)), 2),
-        "std_reward":          round(float(np.std(rewards)), 2),
-        "mean_mutations":      round(float(np.mean(mutations)), 1),
-        "attack_success_rate": round(high_risk / max(total, 1), 4),
-        "mttd_mean_steps":     round(float(np.mean(mttd_list)), 1) if mttd_list else None,
+    summary = {
+        "policy": label,
+        "mean_reward": round(float(np.mean([e["episode_reward"] for e in eps])), 2),
+        "mean_peak_exposure": round(float(np.mean([e["mean_peak_exposure"] for e in eps])), 4),
+        "pct_steps_critical": round(float(np.mean([e["pct_steps_critical"] for e in eps])), 4),
+        "kill_chain_coverage": round(float(np.mean([e["stages_correct"] for e in eps])) / len(KILL_CHAIN), 4),
+        "kill_chain_precision": round(float(np.mean([e["stage_precision"] for e in eps])), 4),
+        "mean_mutations": round(float(np.mean([e["mutations"] for e in eps])), 1),
     }
+    print(f"  {label:<30}    {summary['mean_peak_exposure']:.3f}   "
+          f"    {100*summary['pct_steps_critical']:5.1f}%   "
+          f"cover {100*summary['kill_chain_coverage']:5.1f}%   "
+          f"precision {100*summary['kill_chain_precision']:5.1f}%   "
+          f"  {summary['mean_reward']:8.2f}")
+    return {"summary": summary, "episodes": eps}
 
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    print("\nGhostNet Phase 5 — Adversarial Evaluation")
-    print(f"Model: {MODEL_PATH}  |  Episodes: {NUM_EPISODES}  |  Steps: {MAX_STEPS}\n")
-
-    # Load model
-    model_path = Path(MODEL_PATH)
-    if not model_path.exists():
-        model_path = Path("ghostnet_final.zip")
-    if not model_path.exists():
-        raise FileNotFoundError(
-            "Trained model not found. Expected: best_model/best_model.zip "
-            "or ghostnet_final.zip"
-        )
-    model = PPO.load(str(model_path))
-    print(f"[MODEL] Loaded: {model_path}")
-
-    # Connect to CALDERA
-    bridge = CalderaBridge()
-    bridge.start_operation()
-
-    # Create environment
-    env = make_env()
+    live = "--live-feeds" in sys.argv
+    print("=" * 100)
+    print(f"  GhostNet Phase 5 — kill-chain evaluation "
+          f"({len(KILL_CHAIN)} stages x {STAGE_STEPS} steps, {NUM_EPISODES} episodes)")
+    print(f"  Threat feeds: {'LIVE' if live else 'simulated (reproducible)'}")
+    print("=" * 100)
+    print(f"  {'policy':<30} {'exposure':>9}  {'critical':>9}  {'coverage':>9}  "
+          f"{'precision':>10}  {'reward':>8}")
+    print("  " + "-" * 96)
 
     results = {}
-    try:
-        # Scenario 1: Agent, no attack
-        eps = run_scenario("baseline", env, model, bridge,
-                           attack_active=False,
-                           num_ep=NUM_EPISODES, max_steps=MAX_STEPS)
-        results["baseline"] = {"episodes": eps, "summary": summarize(eps)}
+    results["no_defence"] = run_policy("Static (no defence)", None,
+                                       NUM_EPISODES, live, static=True)
+    results["random"] = run_policy("Random mutation",
+                                   lambda o, r: r.integers(0, 6), NUM_EPISODES, live)
+    rr = {"i": 0}
+    def round_robin(o, r):
+        a = rr["i"] % 5; rr["i"] += 1; return a
+    results["round_robin"] = run_policy("Round-robin MTD", round_robin,
+                                        NUM_EPISODES, live)
 
-        # Scenario 2: Agent + CALDERA attack  ← KEY RESULT
-        eps = run_scenario("under_attack", env, model, bridge,
-                           attack_active=True,
-                           num_ep=NUM_EPISODES, max_steps=MAX_STEPS)
-        results["under_attack"] = {"episodes": eps, "summary": summarize(eps)}
+    import os
+    for tag, path in (("ppo_collapsed", "ghostnet_final.zip"),
+                      ("ppo_ghostnet", "ghostnet_smart.zip")):
+        if not os.path.exists(path):
+            print(f"  [skip] {path} not found")
+            continue
+        m = PPO.load(path, device="cpu")
+        name = "PPO collapsed (baseline)" if tag == "ppo_collapsed" else "PPO GhostNet (smart)"
+        results[tag] = run_policy(name,
+                                  lambda o, r, m=m: m.predict(o, deterministic=True)[0],
+                                  NUM_EPISODES, live)
 
-        # Scenario 3: Static (no agent) + CALDERA attack  ← comparison
-        eps = run_scenario("static_defense", env, model=None, bridge=bridge,
-                           attack_active=True,
-                           num_ep=NUM_EPISODES, max_steps=MAX_STEPS)
-        results["static_defense"] = {"episodes": eps, "summary": summarize(eps)}
+    results["oracle"] = run_policy("Oracle (most-exposed)",
+                                   lambda o, r: int(np.argmax(o[:5])), NUM_EPISODES, live)
 
-    finally:
-        env.close()
-        bridge.stop_operation()
-
-    # Save results
     with open(RESULTS_FILE, "w") as f:
-        json.dump(results, f, indent=2)
-    print(f"\n[DONE] Results saved → {RESULTS_FILE}")
+        json.dump({k: v["summary"] for k, v in results.items()}, f, indent=2)
 
-    # Print summary
-    print("\n" + "="*55)
-    print("PHASE 5 RESULTS SUMMARY")
-    print("="*55)
-    for scenario, data in results.items():
-        s = data["summary"]
-        print(f"\n[{scenario.upper()}]")
-        print(f"  Mean Reward       : {s['mean_reward']} ± {s['std_reward']}")
-        print(f"  Mean Mutations/ep : {s['mean_mutations']}")
-        print(f"  Attack Success    : {s['attack_success_rate']*100:.1f}%")
-        print(f"  MTTD (steps)      : {s['mttd_mean_steps']}")
-    print("="*55)
-    print("\nNext → run: python phase5_visualize.py")
+    if "ppo_ghostnet" in results:
+        print("\n  Per-stage response — PPO GhostNet, episode 0")
+        print("  " + "-" * 96)
+        print(f"  {'stage':<7}{'TTP':<8}{'technique':<36}{'expected':<12}{'taken':<16}{'hit':<6}prec")
+        for r in results["ppo_ghostnet"]["episodes"][0]["stage_detail"]:
+            exp = f"{r['expected']}:{ACTION_NAMES[r['expected']][:9]}" if r['expected'] is not None else "-"
+            taken = ",".join(str(a) for a in sorted(set(r["taken"])))
+            print(f"  {r['stage']:<7}{r['ttp']:<8}{r['name'][:34]:<36}{exp:<12}{taken:<16}"
+                  f"{'YES' if r['hit'] else 'no':<6}{r['precision']:.2f}")
+    print(f"\n  Results written to {RESULTS_FILE}")
 
 
 if __name__ == "__main__":

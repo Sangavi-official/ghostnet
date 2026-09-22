@@ -26,8 +26,8 @@ import requests
 from typing import Dict, Optional
 
 # ── Config ────────────────────────────────────────────────────────────────────
-CALDERA_URL   = "http://localhost:8888"
-API_KEY       = "ADMIN123"          # default CALDERA dev key
+CALDERA_URL    = "http://localhost:8888"
+API_KEY        = "WhrGbb89JW60pJmCfli7U0Ir2ibMrX30QbpoTuJfORY"   # CHECK THIS — verify against conf/local.yml
 OPERATION_NAME = "GhostNet-Phase5-Eval"
 
 logging.basicConfig(
@@ -37,52 +37,52 @@ logging.basicConfig(
 log = logging.getLogger("caldera_bridge")
 
 # ── TTP → GhostNet threat dimension mapping ──────────────────────────────────
-# GhostNet 12-dim state (from ghostnet_env_v3.py):
-#   0: cvss_score          (0-1)   — NIST CVE severity
-#   1: abuseipdb_score     (0-1)   — IP reputation
-#   2: attck_score         (0-1)   — MITRE ATT&CK match
-#   3: port_exposure       (0-1)   — open port count / max
-#   4: connection_rate     (0-1)   — connections per interval
-#   5: mutation_count      (0-1)   — recent mutations (normalised)
-#   6: time_since_mutation (0-1)   — staleness (1=never mutated)
-#   7: threat_composite    (0-1)   — weighted aggregate
-#   8: lateral_movement    (0-1)   — east-west traffic anomaly
-#   9: data_exfil_risk     (0-1)   — egress volume anomaly
-#  10: c2_likelihood       (0-1)   — C2 beacon pattern score
-#  11: ransomware_risk     (0-1)   — encryption / write-spike indicator
+# GhostNet 12-dim state (ACTUAL layout, from ghostnet_env_v2.py):
+#   [0]  cloud_ip_exposure
+#   [1]  open_ports
+#   [2]  api_exposure
+#   [3]  iot_ip_exposure
+#   [4]  mqtt_exposure
+#   [5]  cve_score            (live)
+#   [6]  shodan_score         (live)
+#   [7]  traffic_load
+#   [8]  recon_attempts
+#   [9]  time_since_mutation
+#   [10] abuse_score          (live)
+#   [11] attck_score          (live)
 #
 # Each ATT&CK technique ID maps to {dimension_index: boost_value}.
 # Boost values are ADDED to existing env threat scores (clamped to 1.0).
 
 TTP_BOOST_MAP: Dict[str, Dict[int, float]] = {
     # Initial Access
-    "T1190": {0: 0.4, 3: 0.5, 7: 0.3},   # Exploit Public-Facing Application
-    "T1133": {3: 0.3, 4: 0.3, 7: 0.2},   # External Remote Services
-    "T1078": {1: 0.3, 7: 0.2},            # Valid Accounts (credential abuse)
+    "T1190": {2: 0.4, 1: 0.5, 5: 0.3},    # Exploit Public-Facing Application -> API + ports + CVE
+    "T1133": {1: 0.3, 7: 0.3},             # External Remote Services -> ports + traffic
+    "T1078": {10: 0.3, 11: 0.2},           # Valid Accounts (credential abuse) -> abuse + attck
 
     # Discovery
-    "T1046": {3: 0.6, 4: 0.5, 7: 0.3},   # Network Service Discovery (port scan)
-    "T1082": {7: 0.2},                     # System Information Discovery
-    "T1083": {9: 0.2, 7: 0.15},           # File & Directory Discovery
+    "T1046": {1: 0.6, 8: 0.5, 7: 0.3},    # Network Service Discovery (port scan) -> ports + recon
+    "T1082": {8: 0.2, 11: 0.15},           # System Information Discovery -> recon
+    "T1083": {8: 0.2, 11: 0.15},           # File & Directory Discovery -> recon
 
     # Lateral Movement
-    "T1021": {8: 0.6, 4: 0.4, 7: 0.3},   # Remote Services (SSH/RDP)
-    "T1563": {8: 0.5, 7: 0.25},           # Remote Service Session Hijacking
+    "T1021": {3: 0.6, 4: 0.4, 8: 0.3},    # Remote Services (SSH/RDP) -> IoT gateway + MQTT
+    "T1563": {3: 0.5, 8: 0.25},            # Remote Service Session Hijacking
 
     # Command & Control
-    "T1071": {10: 0.7, 4: 0.4, 7: 0.35}, # Application Layer Protocol (C2)
-    "T1095": {10: 0.5, 4: 0.3, 7: 0.25}, # Non-Application Layer Protocol
-    "T1572": {10: 0.6, 7: 0.3},           # Protocol Tunneling (DNS/HTTPS C2)
+    "T1071": {10: 0.7, 7: 0.4, 11: 0.35}, # Application Layer Protocol (C2) -> abuse + traffic
+    "T1095": {10: 0.5, 7: 0.3},            # Non-Application Layer Protocol
+    "T1572": {10: 0.6, 11: 0.3},           # Protocol Tunneling (DNS/HTTPS C2)
 
     # Exfiltration
-    "T1041": {9: 0.7, 4: 0.5, 7: 0.4},   # Exfiltration Over C2 Channel
-    "T1048": {9: 0.8, 3: 0.3, 7: 0.45},  # Exfil Over Alternative Protocol
+    "T1041": {4: 0.7, 7: 0.5, 11: 0.4},   # Exfiltration Over C2 Channel -> MQTT
+    "T1048": {4: 0.8, 1: 0.3, 11: 0.45},  # Exfil Over Alternative Protocol
 
     # Impact — highest priority for hospital context
-    "T1486": {11: 0.9, 7: 0.6, 0: 0.5},  # Data Encrypted for Impact (RANSOMWARE)
-    "T1489": {11: 0.7, 7: 0.5},           # Service Stop (disrupts infusion pump comms)
-    "T1529": {11: 0.6, 7: 0.45},          # System Shutdown/Reboot
-    "T1565": {11: 0.5, 9: 0.4, 7: 0.35}, # Data Manipulation (alter pump dosage data)
+    "T1486": {0: 0.9, 5: 0.6, 10: 0.5},   # Data Encrypted for Impact (RANSOMWARE) -> cloud IP + CVE
+    "T1489": {4: 0.7, 0: 0.5},             # Service Stop (disrupts infusion pump comms) -> MQTT
+    "T1529": {0: 0.6, 5: 0.45},            # System Shutdown/Reboot
+    "T1565": {4: 0.5, 8: 0.4, 11: 0.35},  # Data Manipulation (alter pump dosage data) -> MQTT
 }
 
 # Adversary definition — healthcare-targeted hospital ransomware kill-chain
@@ -121,7 +121,7 @@ class CalderaBridge:
             "Content-Type": "application/json",
         }
         self.operation_id: Optional[str] = None
-        self._active_ttps: Dict[str, float] = {}  # TTP_ID → activation_time
+        self._active_ttps: Dict[str, float] = {}  # TTP_ID -> activation_time
         self._injection_cache: Dict[int, float] = {}
 
         # Verify server is reachable
@@ -141,7 +141,7 @@ class CalderaBridge:
         except Exception as e:
             raise ConnectionError(
                 f"Cannot reach CALDERA at {self.base_url}. "
-                f"Is Docker running? Error: {e}"
+                f"Is Docker running, and is API_KEY correct? Error: {e}"
             )
 
     # ── Adversary setup ───────────────────────────────────────────────────────
@@ -181,11 +181,11 @@ class CalderaBridge:
         adv_id = self._get_or_create_adversary()
 
         payload = {
-            "name":      OPERATION_NAME,
-            "adversary": {"adversary_id": adv_id},
-            "planner":   {"id": "aaa7c857-37a0-4c4a-85f7-4e9f7f30e31a"},  # atomic
+            "name":       OPERATION_NAME,
+            "adversary":  {"adversary_id": adv_id},
+            "planner":    {"id": "aaa7c857-37a0-4c4a-85f7-4e9f7f30e31a"},  # atomic
             "auto_close": False,
-            "state":     "running",
+            "state":      "running",
         }
         r = requests.post(
             f"{self.base_url}/api/v2/operations",

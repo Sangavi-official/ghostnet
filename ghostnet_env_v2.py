@@ -20,17 +20,23 @@ STATE VECTOR (locked specification — see STATE_VECTOR_SPEC.txt):
   [11] attck_score          (live, fetched once at construction)
 
 ACTION SPACE (6 mutations):
-  0 = rotate_cloud_ip
-  1 = close_open_port
-  2 = rotate_api_path
-  3 = rotate_iot_ip
-  4 = rotate_mqtt_topic
-  5 = update_firewall
+  0 = rotate_cloud_ip   -> defends state index 0 (cloud IP exposure)
+  1 = close_open_port   -> defends state index 1 (open ports)
+  2 = rotate_api_path   -> defends state index 2 (API exposure)
+  3 = rotate_iot_ip     -> defends state index 3 (IoT gateway IP)
+  4 = rotate_mqtt_topic -> defends state index 4 (MQTT exposure)
+  5 = update_firewall   -> general defense across all attack surfaces
 
-REWARD — Traffic-Aware Dual-Objective Reward (TADR), with:
-  - DESOLATER-inspired connection migration
-    (Yoon et al., IEEE Access 2021, DOI:10.1109/ACCESS.2021.3076599)
-  - LTSA-driven bonus for closing ports/API under high CVE threat
+REWARD — Traffic-Aware Dual-Objective Reward (TADR):
+  The agent is rewarded for mutating the surface that is ACTUALLY
+  exposed, and penalised for wasting a mutation on an already-safe
+  surface. This threat-aware reward gives the policy a learning
+  signal (earlier flat reward caused policy collapse).
+  Augmented with:
+    - DESOLATER-inspired connection migration
+      (Yoon et al., IEEE Access 2021, DOI:10.1109/ACCESS.2021.3076599)
+    - LTSA-driven bonus for closing ports/API under high CVE threat
+      and firewall/port action under high abuse threat.
 """
 
 import gymnasium as gym
@@ -103,32 +109,69 @@ class GhostNetEnvV2(gym.Env):
         new_state    = self.state.copy()
         traffic_load = float(new_state[7])
 
+        # ---------------------------------------------------------------
+        # How exposed was the surface the agent chose to mutate?
+        # (value BEFORE mutation — this is the key learning signal)
+        # ---------------------------------------------------------------
+        surfaces = [float(self.state[i]) for i in range(5)]  # indices 0-4
+        if action <= 4:
+            # targeted action: reward = how exposed THIS surface was,
+            # plus a precision bonus for hitting the single most-exposed one.
+            exposure_before = surfaces[action]
+            if action == int(np.argmax(surfaces)):
+                exposure_before += 0.3          # precision bonus: hit the hottest surface
+        else:
+            # firewall: broad move. Valued by AVERAGE exposure (not max),
+            # so it only wins when MANY surfaces are exposed at once.
+            exposure_before = float(np.mean(surfaces)) - 0.1   # broad-action cost
+
+        # ---------------------------------------------------------------
         # DESOLATER-inspired connection migration:
         # high traffic -> gentle mutation with handoff window,
         # low traffic  -> aggressive mutation is safe.
-        if traffic_load > 0.5:
-            new_state[action] = np.random.uniform(0.1, 0.25)
-            connection_safe   = True
+        # Either way the mutated surface is brought down to a low
+        # (safe) exposure value.
+        # ---------------------------------------------------------------
+        connection_safe = True
+        post_value = (np.random.uniform(0.1, 0.25) if traffic_load > 0.5
+                      else np.random.uniform(0.0, 0.15))
+
+        if action <= 4:
+            # Targeted mutation: this one surface is moved to a safe value.
+            new_state[action] = post_value
         else:
-            new_state[action] = np.random.uniform(0.0, 0.15)
-            connection_safe   = True
+            # BUGFIX: action 5 is update_firewall, a BROAD defensive move.
+            # Previously this line wrote post_value into new_state[5], which
+            # is the live CVE score -- corrupting a threat-feed dimension and
+            # letting the broad action collect reward without reducing any
+            # exposure at all. A firewall update now applies a modest
+            # reduction across ALL five attack surfaces, which is what the
+            # action actually means, and leaves the feeds untouched.
+            for i in range(5):
+                new_state[i] = max(0.0, float(new_state[i]) - 0.15)
 
-        attacker_disruption = 1.0 - new_state[action]
-        traffic_penalty      = traffic_load * (0.05 if connection_safe else 0.2)
-        mutation_cost         = 0.05
+        # ---------------------------------------------------------------
+        # CORE REWARD (threat-aware):
+        #   - Mutating a HIGHLY-exposed surface is valuable.
+        #   - Mutating an already-safe surface wastes a move.
+        # ---------------------------------------------------------------
+        attacker_disruption = exposure_before                 # high if surface was exposed
+        wasted_move_penalty = 0.3 * (1.0 - exposure_before)   # penalty for a pointless mutation
 
-        # LTSA bonus: reward closing ports/API specifically when
-        # live CVE threat is genuinely high.
-        cve_bonus = 0.1 if (new_state[5] > 0.7 and action in [1, 2]) else 0.0
+        traffic_penalty = traffic_load * (0.05 if connection_safe else 0.2)
+        mutation_cost   = 0.05
 
-        # Additional LTSA bonus: reward firewall/firewall-adjacent
-        # action when abuse_score is genuinely high (many active
-        # malicious IPs reported right now).
-        abuse_bonus = 0.05 if (new_state[10] > 0.7 and action in [1, 5]) else 0.0
+        # LTSA bonus: closing port / rotating API under high CVE threat.
+        cve_bonus = 0.2 if (new_state[5] > 0.7 and action in [1, 2]) else 0.0
 
+        # LTSA bonus: firewall / port action under high abuse threat
+        # (many active malicious IPs reported right now).
+        abuse_bonus = 0.15 if (new_state[10] > 0.7 and action == 1) else 0.0
+        # DESOLATER bonus: safe handoff achieved under high traffic.
         desolater_bonus = 0.05 if (traffic_load > 0.5 and connection_safe) else 0.0
 
         reward = (attacker_disruption
+                  - wasted_move_penalty
                   - traffic_penalty
                   - mutation_cost
                   + cve_bonus
@@ -136,12 +179,13 @@ class GhostNetEnvV2(gym.Env):
                   + desolater_bonus)
 
         self.mutation_log.append({
-            "step":    self.step_count,
-            "action":  self.action_names[action],
-            "reward":  round(reward, 4),
-            "cve":     round(float(new_state[5]), 3),
-            "abuse":   round(float(new_state[10]), 3),
-            "traffic": round(traffic_load, 3)
+            "step":     self.step_count,
+            "action":   self.action_names[action],
+            "reward":   round(reward, 4),
+            "exposure": round(exposure_before, 3),
+            "cve":      round(float(new_state[5]), 3),
+            "abuse":    round(float(new_state[10]), 3),
+            "traffic":  round(traffic_load, 3)
         })
 
         # recon_attempts increases independently over time —

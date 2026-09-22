@@ -15,8 +15,8 @@ print("  GhostNet — Phase 3 Demonstration")
 print("  Hospital ICU Pipeline -> Cloud Pharmacy Defense")
 print("=" * 60)
 
-model  = PPO.load("best_model/best_model")
-env    = GhostNetEnvV3(use_live_feeds=True, use_real_cloud=True)
+model  = PPO.load("ghostnet_smart")
+env    = GhostNetEnvV3(use_live_feeds=True, use_real_cloud=True, use_real_iot=True)
 obs, _ = env.reset()
 
 action_names = [
