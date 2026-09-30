@@ -9,6 +9,15 @@ Each TTP is mapped to one or more threat dimensions in GhostNet's
 12-dim state vector, producing a "threat injection" dict that
 phase5_eval.py overlays on top of the normal threat-feed values.
 
+WHAT IS REAL AND WHAT IS REPLAY (for the paper)
+  - get_threat_injection() reads techniques that CALDERA actually
+    executed (links with status 0) when an agent is deployed.
+  - simulate_attack_sequence() / _inject_manual_ttp() inject the
+    kill chain locally. That is deterministic REPLAY, not emulation.
+  - The "Hospital-IoT-Ransomware" adversary is created without
+    abilities, so it executes nothing by itself. The live evidence is a
+    separate Discovery operation (T1033, T1087.001, T1057).
+
 Usage (standalone test):
     python caldera_bridge.py
 
@@ -20,6 +29,7 @@ Usage (from eval):
     bridge.stop_operation()
 """
 
+import os
 import time
 import logging
 import requests
@@ -27,7 +37,9 @@ from typing import Dict, Optional
 
 # ── Config ────────────────────────────────────────────────────────────────────
 CALDERA_URL    = "http://localhost:8888"
-API_KEY        = "WhrGbb89JW60pJmCfli7U0Ir2ibMrX30QbpoTuJfORY"   # CHECK THIS — verify against conf/local.yml
+# Lab server key from CALDERA's conf/local.yml. Override per machine:
+#   setx GHOSTNET_CALDERA_KEY "..."
+API_KEY        = os.getenv("GHOSTNET_CALDERA_KEY", "WhrGbb89JW60pJmCfli7U0Ir2ibMrX30QbpoTuJfORY")
 OPERATION_NAME = "GhostNet-Phase5-Eval"
 
 logging.basicConfig(
@@ -37,53 +49,11 @@ logging.basicConfig(
 log = logging.getLogger("caldera_bridge")
 
 # ── TTP → GhostNet threat dimension mapping ──────────────────────────────────
-# GhostNet 12-dim state (ACTUAL layout, from ghostnet_env_v2.py):
-#   [0]  cloud_ip_exposure
-#   [1]  open_ports
-#   [2]  api_exposure
-#   [3]  iot_ip_exposure
-#   [4]  mqtt_exposure
-#   [5]  cve_score            (live)
-#   [6]  shodan_score         (live)
-#   [7]  traffic_load
-#   [8]  recon_attempts
-#   [9]  time_since_mutation
-#   [10] abuse_score          (live)
-#   [11] attck_score          (live)
-#
-# Each ATT&CK technique ID maps to {dimension_index: boost_value}.
-# Boost values are ADDED to existing env threat scores (clamped to 1.0).
-
-TTP_BOOST_MAP: Dict[str, Dict[int, float]] = {
-    # Initial Access
-    "T1190": {2: 0.4, 1: 0.5, 5: 0.3},    # Exploit Public-Facing Application -> API + ports + CVE
-    "T1133": {1: 0.3, 7: 0.3},             # External Remote Services -> ports + traffic
-    "T1078": {10: 0.3, 11: 0.2},           # Valid Accounts (credential abuse) -> abuse + attck
-
-    # Discovery
-    "T1046": {1: 0.6, 8: 0.5, 7: 0.3},    # Network Service Discovery (port scan) -> ports + recon
-    "T1082": {8: 0.2, 11: 0.15},           # System Information Discovery -> recon
-    "T1083": {8: 0.2, 11: 0.15},           # File & Directory Discovery -> recon
-
-    # Lateral Movement
-    "T1021": {3: 0.6, 4: 0.4, 8: 0.3},    # Remote Services (SSH/RDP) -> IoT gateway + MQTT
-    "T1563": {3: 0.5, 8: 0.25},            # Remote Service Session Hijacking
-
-    # Command & Control
-    "T1071": {10: 0.7, 7: 0.4, 11: 0.35}, # Application Layer Protocol (C2) -> abuse + traffic
-    "T1095": {10: 0.5, 7: 0.3},            # Non-Application Layer Protocol
-    "T1572": {10: 0.6, 11: 0.3},           # Protocol Tunneling (DNS/HTTPS C2)
-
-    # Exfiltration
-    "T1041": {4: 0.7, 7: 0.5, 11: 0.4},   # Exfiltration Over C2 Channel -> MQTT
-    "T1048": {4: 0.8, 1: 0.3, 11: 0.45},  # Exfil Over Alternative Protocol
-
-    # Impact — highest priority for hospital context
-    "T1486": {0: 0.9, 5: 0.6, 10: 0.5},   # Data Encrypted for Impact (RANSOMWARE) -> cloud IP + CVE
-    "T1489": {4: 0.7, 0: 0.5},             # Service Stop (disrupts infusion pump comms) -> MQTT
-    "T1529": {0: 0.6, 5: 0.45},            # System Shutdown/Reboot
-    "T1565": {4: 0.5, 8: 0.4, 11: 0.35},  # Data Manipulation (alter pump dosage data) -> MQTT
-}
+# Single source of truth: caldera_ttp_map.py (the corrected mapping used by
+# every evaluation). This file previously kept its own older copy, which
+# disagreed with it (e.g. T1071 raised no attack surface at all), so the
+# standalone test in logs/e11_caldera_bridge.txt used the OLD mapping.
+from caldera_ttp_map import TTP_BOOST_MAP, KILL_CHAIN  # noqa: E402
 
 # Adversary definition — healthcare-targeted hospital ransomware kill-chain
 HEALTHCARE_ADVERSARY = {
@@ -93,17 +63,12 @@ HEALTHCARE_ADVERSARY = {
         "hospital IoT and cloud infrastructure. Maps to MITRE ATT&CK techniques "
         "observed in healthcare sector incidents."
     ),
-    "atomic_ordering": [
-        "T1046",  # scan for open ports / MQTT 1883
-        "T1190",  # exploit public-facing EC2 / API
-        "T1078",  # use stolen credentials
-        "T1021",  # lateral movement via SSH
-        "T1071",  # establish C2 channel
-        "T1041",  # exfiltrate patient data
-        "T1565",  # manipulate infusion pump telemetry
-        "T1486",  # encrypt files (ransomware payload)
-        "T1489",  # stop hospital services
-    ],
+    # Technique IDs in kill-chain order (from caldera_ttp_map.KILL_CHAIN).
+    # NOTE: CALDERA's atomic_ordering expects ABILITY ids, not technique
+    # ids, and this adversary is created without abilities. Operations
+    # started from it therefore execute nothing; the chain below is used
+    # only by simulate_attack_sequence(), which is a REPLAY, not emulation.
+    "atomic_ordering": list(KILL_CHAIN),
     "tags": ["healthcare", "ransomware", "iot", "ghostnet-eval"],
 }
 

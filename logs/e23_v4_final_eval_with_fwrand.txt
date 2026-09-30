@@ -1,0 +1,157 @@
+  AIIMS chain, 50 test games per model
+
+  model                   Breaches  Inside %  Mutations   Reward   most-used action
+  ppo_seed0                   0.58       0.9       87.9     -9.5   update_firewall 62%
+  ppo_seed1                   0.50       0.8       88.4     -9.0   update_firewall 62%
+  ppo_seed2                   0.86       1.0       87.4     -9.9   update_firewall 63%
+  ppo_seed3                   0.78       1.1       89.5     -9.5   update_firewall 65%
+  ppo_seed4                   0.68       1.2       87.8    -10.1   update_firewall 51%
+  ppo_seed5                   0.60       1.1       87.2     -9.4   update_firewall 61%
+  ppo_seed6                   0.90       2.8       87.8    -11.9   update_firewall 56%
+  ppo_seed7                   0.74       1.3       89.5     -9.7   update_firewall 68%
+  ppo_seed8                   0.64       1.0       89.7     -9.2   update_firewall 66%
+  ppo_seed9                   0.62       1.4       84.7     -9.7   update_firewall 59%
+  dqn_seed0                   0.72       1.3       80.9     -9.9   update_firewall 54%
+  dqn_seed1                   0.82       1.2       85.3    -10.1   update_firewall 61%
+  dqn_seed2                   0.84       1.1       82.7     -9.7   update_firewall 59%
+  dqn_seed3                   0.62       0.9       83.6     -9.1   update_firewall 65%
+  dqn_seed4                   0.70       1.1       79.4     -9.4   update_firewall 51%
+  dqn_seed5                   0.80       1.3       82.8    -10.1   update_firewall 48%
+  dqn_seed6                   0.74       1.3       84.6     -9.6   update_firewall 65%
+  dqn_seed7                   0.70       1.1       79.6     -9.6   update_firewall 56%
+  dqn_seed8                   0.64       1.0       84.4     -9.2   update_firewall 63%
+  dqn_seed9                   0.60       1.0       83.0     -9.4   update_firewall 48%
+  a2c_seed0                   0.32       6.1       90.0    -14.8   update_firewall 89%
+  a2c_seed1                   1.20      10.5       90.0    -20.5   update_firewall 94%  <-- COLLAPSED
+  a2c_seed2                   1.06      16.3       90.0    -26.9   update_firewall 89%
+  a2c_seed3                   0.94       8.7       90.0    -19.3   update_firewall 95%  <-- COLLAPSED
+  a2c_seed4                   0.74       3.7       90.0    -13.2   update_firewall 76%
+  a2c_seed5                   0.80      10.3       90.0    -19.9   update_firewall 92%  <-- COLLAPSED
+  a2c_seed6                   0.96      12.4       90.0    -22.6   update_firewall 88%
+  a2c_seed7                   0.88       9.2       90.0    -18.7   update_firewall 93%  <-- COLLAPSED
+  a2c_seed8                   0.98      12.6       90.0    -23.0   update_firewall 89%
+  a2c_seed9                   0.86      11.6       90.0    -21.8   update_firewall 92%  <-- COLLAPSED
+  ppo-nofeeds_seed0           0.62       1.8       89.8    -10.1   update_firewall 63%
+  ppo-nofeeds_seed1           0.66       2.2       82.8    -10.6   update_firewall 57%
+  ppo-nofeeds_seed2           0.84       1.8       86.2    -10.3   update_firewall 49%
+  ppo-nofeeds_seed3           0.48       1.5       84.5     -9.1   update_firewall 72%
+  ppo-nofeeds_seed4           0.76       1.4       88.0    -10.0   update_firewall 52%
+  ppo-nofeeds_seed5           0.52       1.3       90.0     -9.1   update_firewall 75%
+  ppo-nofeeds_seed6           0.60       0.9       87.7     -8.9   update_firewall 65%
+  ppo-nofeeds_seed7           0.40       1.1       83.9     -9.0   update_firewall 65%
+  ppo-nofeeds_seed8           0.58       3.1       86.7    -10.9   update_firewall 74%
+  ppo-nofeeds_seed9           0.72       1.2       87.0     -9.4   update_firewall 55%
+  ppo-nohold_seed0            0.64       1.5       90.0     -9.8   update_firewall 70%
+  ppo-nohold_seed1            0.58       1.2       90.0     -9.3   update_firewall 67%
+  ppo-nohold_seed2            0.64       2.0       90.0    -10.5   update_firewall 82%
+  ppo-nohold_seed3            0.54       1.0       90.0     -9.0   update_firewall 68%
+  ppo-nohold_seed4            0.82       1.7       90.0    -10.2   update_firewall 69%
+  ppo-nohold_seed5            0.80       1.6       90.0    -10.2   update_firewall 64%
+  ppo-nohold_seed6            0.86       2.6       90.0    -11.3   update_firewall 72%
+  ppo-nohold_seed7            0.68       2.8       90.0    -11.9   update_firewall 66%
+  ppo-nohold_seed8            0.96       3.0       90.0    -12.2   update_firewall 70%
+  ppo-nohold_seed9            0.66       1.4       90.0     -9.6   update_firewall 68%
+  ppo-fwrand_seed0            1.20       1.9       89.4    -11.5   update_firewall 54%
+  ppo-fwrand_seed1            0.82       1.2       90.0    -12.1   update_firewall 25%
+  ppo-fwrand_seed2            0.82       1.5       87.2    -11.9   update_firewall 33%
+  ppo-fwrand_seed3            1.00       1.5       90.0    -11.7   update_firewall 36%
+  ppo-fwrand_seed4            0.84       1.4       89.9    -10.9   update_firewall 53%
+  ppo-fwrand_seed5            0.88       1.3       87.3    -11.5   update_firewall 35%
+  ppo-fwrand_seed6            0.94       1.5       87.7    -11.7   update_firewall 29%
+  ppo-fwrand_seed7            0.80       1.1       90.0    -11.4   update_firewall 36%
+  ppo-fwrand_seed8            0.94       1.4       88.5    -11.2   update_firewall 48%
+  ppo-fwrand_seed9            0.94       1.4       89.5    -11.5   update_firewall 46%
+  ghostnet_smart (v2)         4.12      37.1       90.0    -67.7   rotate_mqtt_topic 40%
+
+  Policy                            Attacks       Breaches       Inside %      Mutations     Disruption         Reward
+  --------------------------------------------------------------------------------------------------------------------
+  Static (no defence)            5.00 ±0.00     5.00 ±0.00    94.93 ±0.26     0.00 ±0.00     0.00 ±0.00  -453.64 ±3.71
+  Random                        12.94 ±0.67    10.78 ±0.60    57.20 ±3.21    77.04 ±1.17     3.40 ±0.18   -97.00 ±5.17
+  Round-robin                   13.86 ±0.76     3.00 ±0.47     3.36 ±0.53    90.00 ±0.00     4.09 ±0.19   -20.47 ±0.73
+  Greedy (every step)            4.48 ±0.42     0.88 ±0.25     1.20 ±0.36    90.00 ±0.00     4.15 ±0.20   -13.55 ±0.53
+  Threshold (tau=0.3)            4.68 ±0.45     0.88 ±0.27     1.07 ±0.32    87.02 ±0.53     4.03 ±0.18   -13.43 ±0.50
+  ppo (10 seeds)                 2.33 ±0.28     0.69 ±0.09     1.25 ±0.42    88.00 ±1.04     3.61 ±0.05    -9.80 ±0.57
+  dqn (10 seeds)                 2.73 ±0.16     0.72 ±0.06     1.14 ±0.11    82.63 ±1.46     3.45 ±0.04    -9.61 ±0.24
+  a2c (10 seeds)                 1.06 ±0.17     0.87 ±0.17    10.14 ±2.52    90.00 ±0.00     3.61 ±0.05   -20.08 ±2.85
+  ppo-nofeeds (10 seeds)         1.49 ±0.37     0.62 ±0.10     1.63 ±0.47    86.66 ±1.70     3.54 ±0.05    -9.74 ±0.52
+  ppo-nohold (10 seeds)          1.84 ±0.24     0.72 ±0.10     1.88 ±0.49    90.00 ±0.00     3.75 ±0.08   -10.39 ±0.76
+  ppo-fwrand (10 seeds)          4.06 ±0.22     0.92 ±0.09     1.43 ±0.16    88.96 ±0.84     3.80 ±0.06   -11.54 ±0.25
+  ppo-v2-original                5.74 ±0.48     4.12 ±0.44    37.09 ±4.25    90.00 ±0.00     4.62 ±0.24   -67.70 ±6.65
+  (rules and single models: CI across test games; groups: CI across training seeds)
+
+  Paired differences A - B over test games, mean [95% CI]
+  (lower is better for attacks, breaches, inside %, disruption; higher for reward)
+
+    ppo  vs  Greedy (every step)
+      attacks        -2.152  [-2.570, -1.756]  real
+      succeeded      -0.190  [-0.436, +0.050]  could be luck
+      pct_inside     +0.051  [-0.338, +0.431]  could be luck
+      mutations      -2.000  [-2.320, -1.690]  real
+      disruption     -0.541  [-0.613, -0.473]  real
+      reward         +3.749  [+3.246, +4.253]  real
+
+    ppo  vs  Threshold (tau=0.3)
+      attacks        -2.352  [-2.722, -1.976]  real
+      succeeded      -0.190  [-0.468, +0.074]  could be luck
+      pct_inside     +0.184  [-0.204, +0.578]  could be luck
+      mutations      +0.980  [+0.468, +1.524]  real
+      disruption     -0.416  [-0.474, -0.363]  real
+      reward         +3.623  [+3.125, +4.109]  real
+
+    ppo  vs  Round-robin
+      attacks       -11.532  [-12.176, -10.864]  real
+      succeeded      -2.310  [-2.758, -1.878]  real
+      pct_inside     -2.104  [-2.613, -1.607]  real
+      mutations      -2.000  [-2.320, -1.690]  real
+      disruption     -0.476  [-0.528, -0.425]  real
+      reward        +10.671  [+10.059, +11.281]  real
+
+    dqn  vs  ppo
+      attacks        +0.398  [+0.224, +0.566]  real
+      succeeded      +0.028  [-0.056, +0.110]  could be luck
+      pct_inside     -0.109  [-0.269, +0.047]  could be luck
+      mutations      -5.366  [-6.276, -4.490]  real
+      disruption     -0.162  [-0.203, -0.122]  real
+      reward         +0.193  [-0.055, +0.446]  could be luck
+
+    a2c  vs  ppo
+      attacks        -1.264  [-1.468, -1.062]  real
+      succeeded      +0.184  [+0.074, +0.294]  real
+      pct_inside     +8.887  [+5.076, +13.613]  real
+      mutations      +2.000  [+1.690, +2.320]  real
+      disruption     -0.001  [-0.029, +0.027]  could be luck
+      reward        -10.278  [-17.114, -5.348]  real
+
+    ppo-nofeeds  vs  ppo
+      attacks        -0.842  [-1.024, -0.662]  real
+      succeeded      -0.072  [-0.168, +0.018]  could be luck
+      pct_inside     +0.376  [+0.064, +0.702]  real
+      mutations      -1.344  [-1.708, -0.988]  real
+      disruption     -0.070  [-0.091, -0.049]  real
+      reward         +0.065  [-0.371, +0.507]  could be luck
+
+    ppo-nohold  vs  ppo
+      attacks        -0.484  [-0.642, -0.324]  real
+      succeeded      +0.028  [-0.060, +0.114]  could be luck
+      pct_inside     +0.627  [+0.331, +0.931]  real
+      mutations      +2.000  [+1.690, +2.320]  real
+      disruption     +0.140  [+0.120, +0.161]  real
+      reward         -0.587  [-1.038, -0.162]  real
+
+    ppo-fwrand  vs  ppo
+      attacks        +1.736  [+1.532, +1.954]  real
+      succeeded      +0.228  [+0.136, +0.324]  real
+      pct_inside     +0.178  [-0.029, +0.378]  could be luck
+      mutations      +0.960  [+0.660, +1.268]  real
+      disruption     +0.185  [+0.164, +0.205]  real
+      reward         -1.734  [-2.126, -1.318]  real
+
+    ppo-v2-original  vs  ppo
+      attacks        +3.412  [+2.890, +3.932]  real
+      succeeded      +3.430  [+2.990, +3.862]  real
+      pct_inside    +35.838  [+31.715, +40.173]  real
+      mutations      +2.000  [+1.690, +2.320]  real
+      disruption     +1.009  [+0.916, +1.106]  real
+      reward        -57.900  [-64.407, -51.458]  real
+
+  Written to eval_v4_agents.json

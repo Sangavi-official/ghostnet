@@ -1,0 +1,10 @@
+  seed 7: done after   893 s -> models\v4\ppo_seed7.zip
+  seed 0: done after   898 s -> models\v4\ppo_seed0.zip
+  seed 1: done after   898 s -> models\v4\ppo_seed1.zip
+  seed 3: done after   898 s -> models\v4\ppo_seed3.zip
+  seed 2: done after   899 s -> models\v4\ppo_seed2.zip
+  seed 4: done after   900 s -> models\v4\ppo_seed4.zip
+  seed 5: done after   901 s -> models\v4\ppo_seed5.zip
+  seed 6: done after   902 s -> models\v4\ppo_seed6.zip
+  seed 8: done after  1209 s -> models\v4\ppo_seed8.zip
+  seed 9: done after  1212 s -> models\v4\ppo_seed9.zip

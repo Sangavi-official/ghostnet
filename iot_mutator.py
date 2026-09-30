@@ -20,9 +20,16 @@ FIXED IN THIS VERSION
      telemetry would stop. It now opens the SG port FIRST, verifies the
      broker is listening, and ROLLS BACK to the previous config if not.
   5. Every mutation is recorded in mutation_ledger with its old value.
+
+GMCP (added 30 Sept 2026) — rotate_iot_topic_gmcp() and
+restart_broker_gmcp() run the same mutations over the signed,
+acknowledged, make-before-break protocol in gmcp.py, for device_v3.py.
+The original functions are unchanged, so earlier results reproduce.
 """
 
 import json
+import os
+import queue
 import random
 import string
 import time
@@ -31,6 +38,7 @@ import paho.mqtt.client as mqtt
 import paramiko
 
 import ghostnet_config as cfg
+import gmcp
 from mutation_ledger import ledger
 
 mutation_history = []
@@ -46,9 +54,14 @@ def _mqtt_client(client_id=""):
     same function works under either API and no warning is emitted.
     """
     try:
-        return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id or None)
+        c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id or None)
     except AttributeError:
-        return mqtt.Client(client_id) if client_id else mqtt.Client()
+        c = mqtt.Client(client_id) if client_id else mqtt.Client()
+    # Broker authentication, if configured (never stored in source).
+    user = os.getenv("GHOSTNET_MQTT_USER")
+    if user:
+        c.username_pw_set(user, os.getenv("GHOSTNET_MQTT_PASS", ""))
+    return c
 
 
 def log_mutation(action, details, success):
@@ -326,6 +339,193 @@ def restart_broker_with_new_port(new_port=None, announce=True, grace=5.0, force=
                         f"(restored={restored})", False)
 
 
+# ─────────────────── GMCP: signed, acknowledged mutations ──────────────
+ACK_TOPIC = cfg.CONTROL_TOPIC.replace("/control/", "/ack/")   # ghostnet/ack/pump1
+AUTH_KEYS = ("allow_anonymous", "password_file", "acl_file")
+
+
+def _gmcp_controller():
+    key = os.getenv("GHOSTNET_GMCP_KEY", "")
+    if len(key) < 32:
+        raise RuntimeError("set GHOSTNET_GMCP_KEY (hex, same value as on the device)")
+    # The sequence number lives in the ledger so it survives restarts.
+    return gmcp.Controller("pump1", bytes.fromhex(key), time.time,
+                           next_seq=int(ledger.get_config("gmcp_next_seq", 1)))
+
+
+class _GmcpLink:
+    """MQTT transport for gmcp.run_transaction: publish commands, collect ACKs."""
+
+    def __init__(self, ctrl, port):
+        self.ctrl, self.acks = ctrl, queue.Queue()
+        self.c = _mqtt_client("ghostnet-gmcp")
+        self.c.on_message = lambda c, u, m, p=None: self.acks.put(m.payload)
+        self.c.connect(cfg.EC2_HOST, port, 60)
+        self.c.subscribe(ACK_TOPIC, qos=1)
+        self.c.loop_start()
+        time.sleep(0.5)                       # let the subscription settle
+
+    def send(self, msg):
+        self.c.publish(cfg.CONTROL_TOPIC, json.dumps(msg), qos=1)
+
+    def recv(self, seq, status, timeout):
+        deadline = time.time() + timeout
+        while (left := deadline - time.time()) > 0:
+            try:
+                m = json.loads(self.acks.get(timeout=left))
+            except queue.Empty:
+                return False
+            except ValueError:
+                continue
+            if self.ctrl.is_ack(m, seq, status):
+                return True
+        return False
+
+    def close(self):
+        self.c.loop_stop()
+        self.c.disconnect()
+
+
+def _gmcp_transaction(port, cmd):
+    """One PREPARE/COMMIT exchange over the broker listener on `port`."""
+    ctrl = _gmcp_controller()
+    link = _GmcpLink(ctrl, port)
+    try:
+        return gmcp.run_transaction(ctrl, link.send, link.recv, cmd)
+    finally:
+        link.close()
+        ledger.set_config("gmcp_next_seq", ctrl.next_seq)
+
+
+def rotate_iot_topic_gmcp(timeout=20):
+    """
+    Action 4 over GMCP. The device must acknowledge before anything is
+    recorded; live telemetry on the new topic is still the final proof.
+    """
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    new_topic = f"hospital/icu/vitals/p{suffix}"
+    old_topic = ledger.get_config("telemetry_topic", cfg.TELEMETRY_TOPIC)
+    port = ledger.get_config("broker_port", cfg.MQTT_PORT)
+    try:
+        outcome, seq, sent = _gmcp_transaction(
+            port, {"action": "rotate_topic", "new_topic": new_topic})
+    except Exception as e:
+        return log_mutation("rotate_mqtt_topic", f"GMCP channel unavailable: {e}", False)
+    if outcome == "aborted":
+        return log_mutation("rotate_mqtt_topic",
+                            f"GMCP seq {seq}: no PREPARE ack after {sent} messages "
+                            f"-- aborted, topic unchanged", False)
+
+    entry = ledger.record("iot", "rotate_mqtt_topic", cfg.EC2_HOST,
+                          old_topic, new_topic, config_key="telemetry_topic")
+    ok = wait_for_topic(new_topic, timeout=timeout)
+    ledger.mark_verified(entry["id"], ok)
+    if not ok:
+        ledger.set_config("telemetry_topic", old_topic)
+        return log_mutation("rotate_mqtt_topic",
+                            f"GMCP seq {seq} {outcome}, but no telemetry on {new_topic}", False)
+    return log_mutation("rotate_mqtt_topic",
+                        f"{old_topic} -> {new_topic} | GMCP seq {seq} {outcome}, "
+                        f"{sent} msgs | CONFIRMED live telemetry", True)
+
+
+def _write_broker_conf_ports(ports, auth_lines, ws_port=None):
+    """Broker conf with one MQTT listener per port; auth settings preserved."""
+    ws_port = ws_port or cfg.MQTT_WS_PORT
+    conf = "".join(f"listener {p} 0.0.0.0\nprotocol mqtt\n\n" for p in ports)
+    conf += f"listener {ws_port} 0.0.0.0\nprotocol websockets\n\n"
+    conf += "\n".join(auth_lines or ["allow_anonymous true"]) + "\n"
+    cmd = (f"sudo tee {cfg.BROKER_CONF} > /dev/null << 'GHOSTNETEOF'\n"
+           f"{conf}GHOSTNETEOF\n"
+           f"sudo systemctl restart mosquitto")
+    return _ssh_run(cmd, timeout=25)
+
+
+def restart_broker_gmcp(new_port=None, force=False, settle=6.0):
+    """
+    Action 3 over GMCP, make-before-break:
+      1. open the new port in the Security Group
+      2. MAKE: broker listens on BOTH old and new ports
+      3. signed PREPARE/COMMIT over the old listener
+      4. ground truth: telemetry on the new port
+      5. BREAK: only then remove the old listener and close its SG port
+    If any step fails the old listener was never removed, so the device
+    cannot be stranded; the new listener is removed instead.
+    NOTE: steps 2 and 5 restart Mosquitto (listeners cannot be reloaded),
+    so the device reconnects once at each step; that is part of the gap.
+    """
+    if not cfg.ALLOW_BROKER_HOP and not force:
+        return log_mutation("rotate_iot_ip",
+                            "SKIPPED: broker relocation disabled "
+                            "(set GHOSTNET_ALLOW_BROKER_HOP=1 for the experiment)", True)
+
+    lo, hi = cfg.MUTABLE_PORT_RANGE
+    old_port = ledger.get_config("broker_port", cfg.MQTT_PORT)
+    while new_port is None or new_port == old_port:
+        new_port = random.randint(lo, hi)
+
+    try:
+        from p3_cloud_mutator import open_port, close_port, verify_port
+        if not open_port(new_port) or not verify_port(new_port, True):
+            return log_mutation("rotate_iot_ip", f"SG port {new_port} unavailable — hop refused", False)
+    except Exception as e:
+        return log_mutation("rotate_iot_ip", f"cloud pre-step failed: {e}", False)
+
+    prev_conf = _ssh_run(f"cat {cfg.BROKER_CONF} 2>/dev/null || true")[0]
+    auth = [l.strip() for l in prev_conf.splitlines()
+            if l.strip() and l.split()[0] in AUTH_KEYS]
+    entry = ledger.record("iot", "rotate_iot_ip", cfg.EC2_HOST,
+                          old_port, new_port, config_key="broker_port")
+    t0 = time.time()
+
+    def undo(reason):
+        _write_broker_conf_ports([old_port], auth)
+        try:
+            close_port(new_port)
+        except Exception:
+            pass
+        ledger.mark_verified(entry["id"], False)
+        ledger.set_config("broker_port", old_port)
+        return log_mutation("rotate_iot_ip", f"{reason} | old listener :{old_port} kept, "
+                                             f"new :{new_port} removed", False)
+
+    # 2. MAKE
+    _write_broker_conf_ports([old_port, new_port], auth)
+    time.sleep(3)
+    listening = broker_listening_ports()
+    if not {old_port, new_port} <= set(listening):
+        return undo(f"dual listener not up (listening {listening})")
+    time.sleep(settle)                         # device reconnects to the old listener
+
+    # 3. COORDINATE over the old listener
+    try:
+        outcome, seq, sent = _gmcp_transaction(old_port, {"action": "broker_move",
+                                                          "new_port": new_port})
+    except Exception as e:
+        return undo(f"GMCP channel unavailable: {e}")
+    if outcome == "aborted":
+        return undo(f"GMCP seq {seq}: device never confirmed PREPARE ({sent} messages)")
+
+    # 4. GROUND TRUTH on the new listener
+    topic = ledger.get_config("telemetry_topic", cfg.TELEMETRY_TOPIC)
+    if not wait_for_topic(topic, port=new_port, timeout=30):
+        return undo(f"GMCP seq {seq} {outcome}, but no telemetry on :{new_port}")
+    gap = time.time() - t0
+
+    # 5. BREAK
+    _write_broker_conf_ports([new_port], auth)
+    time.sleep(3)
+    try:
+        if old_port not in cfg.PROTECTED_PORTS:
+            close_port(old_port)
+    except Exception:
+        pass
+    ledger.mark_verified(entry["id"], True)
+    return log_mutation("rotate_iot_ip",
+                        f"broker {old_port} -> {new_port} | GMCP seq {seq} {outcome}, "
+                        f"{sent} msgs | telemetry on new listener after {gap:.1f}s", True)
+
+
 def get_mutation_history():
     return mutation_history
 
@@ -341,7 +541,11 @@ if __name__ == "__main__":
     print(f"  Broker listening : {status['listening']}")
     print(f"  GhostNet conf    :\n{status['conf'] or '    (none)'}\n")
 
-    if "--topic" in sys.argv:
+    if "--topic" in sys.argv and "--gmcp" in sys.argv:
+        rotate_iot_topic_gmcp()
+    elif "--port-hop" in sys.argv and "--gmcp" in sys.argv:
+        restart_broker_gmcp(force=True)
+    elif "--topic" in sys.argv:
         rotate_iot_topic()
     elif "--port-hop" in sys.argv:
         # --no-announce reproduces the NAIVE hop, for the before/after result
@@ -349,5 +553,6 @@ if __name__ == "__main__":
         restart_broker_with_new_port(announce="--no-announce" not in sys.argv, force=True)
     else:
         print("  Usage: python iot_mutator.py --topic | --port-hop [--no-announce]")
+        print("         python iot_mutator.py --topic --gmcp | --port-hop --gmcp")
         print("  (no mutation performed — this module no longer acts on import)")
     ledger.summary()

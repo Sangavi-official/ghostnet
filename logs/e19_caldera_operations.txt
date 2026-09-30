@@ -1,0 +1,5 @@
+CALDERA at http://localhost:8888: 1 operations on record
+
+- GhostNet-Phase5-Eval | adversary: Hospital-IoT-Ransomware | state: finished | started: 2026-09-22T15:25:56Z
+  links: 0 total, 0 succeeded
+
