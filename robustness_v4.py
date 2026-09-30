@@ -82,26 +82,37 @@ def main():
     from eval_v4_agents import bootstrap_diff
 
     tasks = [(n, o, a.episodes) for n, o in SETTINGS]
-    with ProcessPoolExecutor(max_workers=a.jobs) as pool:
+    # max_tasks_per_child=1: every setting gets a FRESH worker process.
+    # Overrides are module globals, so a reused worker would carry one
+    # setting's values into the next (this corrupted one row of an
+    # earlier run: logs/e21_v4_robustness.txt, "exploit takes 2 steps").
+    with ProcessPoolExecutor(max_workers=a.jobs, max_tasks_per_child=1) as pool:
         results = list(pool.map(evaluate_setting, tasks))
 
     store = {}
+    labels = list(results[0][2])
+    learned = [l for l in labels if l.lower() in GROUPS]
     for metric, title in (("succeeded", "Breaches per game"),
                           ("pct_inside", "% of time the attacker is inside"),
                           ("disruption", "Disruption to the hospital")):
-        print(f"\n  {title} (AIIMS chain, {a.episodes} games; PPO/DQN = mean of 10 models)")
-        labels = list(results[0][2])
-        print(f"  {'setting':<24}" + "".join(f"{l:>14}" for l in labels)
-              + "     PPO - Greedy [95% CI]")
-        print("  " + "-" * (24 + 14 * len(labels) + 40))
+        print(f"\n  {title} (AIIMS chain, {a.episodes} games; learned = mean of 10 models)")
+        print(f"  {'setting':<24}" + "".join(f"{l:>14}" for l in labels))
+        print("  " + "-" * (24 + 14 * len(labels)))
         for name, overrides, out in results:
             means = {l: float(np.mean(out[l][metric])) for l in labels}
-            d, lo, hi = bootstrap_diff(np.array(out["PPO"][metric]) - np.array(out["Greedy"][metric]))
-            verdict = "real" if (lo > 0 or hi < 0) else "could be luck"
-            print(f"  {name:<24}" + "".join(f"{means[l]:>14.2f}" for l in labels)
-                  + f"     {d:+.2f} [{lo:+.2f}, {hi:+.2f}] {verdict}")
-            store.setdefault(name, {"overrides": overrides})[metric] = {
-                "means": means, "ppo_minus_greedy": {"mean": d, "ci95": [lo, hi], "verdict": verdict}}
+            print(f"  {name:<24}" + "".join(f"{means[l]:>14.2f}" for l in labels))
+            store.setdefault(name, {"overrides": overrides})[metric] = {"means": means}
+        print(f"\n  paired difference vs Greedy, mean [95% CI]  (* = real, not luck)")
+        print(f"  {'setting':<24}" + "".join(f"{l + ' - Greedy':>28}" for l in learned))
+        for name, overrides, out in results:
+            cells = ""
+            for l in learned:
+                d, lo, hi = bootstrap_diff(np.array(out[l][metric]) - np.array(out["Greedy"][metric]))
+                real = lo > 0 or hi < 0
+                cells += f"{d:>+9.2f} [{lo:+.2f},{hi:+.2f}]{'*' if real else ' '}"
+                store[name][metric][f"{l}_minus_greedy"] = {
+                    "mean": d, "ci95": [lo, hi], "verdict": "real" if real else "could be luck"}
+            print(f"  {name:<24}{cells}")
 
     with open(RESULTS, "w") as f:
         json.dump({"episodes": a.episodes, "settings": store}, f, indent=2)

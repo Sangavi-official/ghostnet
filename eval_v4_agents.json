@@ -901,6 +901,186 @@
       ],
       "collapsed": false
     },
+    "ppo-fwrand_seed0": {
+      "attacks": 3.86,
+      "succeeded": 1.2,
+      "pct_inside": 1.9333333333333333,
+      "mutations": 89.42,
+      "disruption": 3.8723184315465393,
+      "reward": -11.47034099334255,
+      "action_share": [
+        0.045,
+        0.076,
+        0.094,
+        0.08,
+        0.156,
+        0.542,
+        0.006
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed1": {
+      "attacks": 4.54,
+      "succeeded": 0.82,
+      "pct_inside": 1.222222222222222,
+      "mutations": 90.0,
+      "disruption": 3.7967367815740403,
+      "reward": -12.118318247913571,
+      "action_share": [
+        0.138,
+        0.152,
+        0.153,
+        0.106,
+        0.202,
+        0.248,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed2": {
+      "attacks": 4.22,
+      "succeeded": 0.82,
+      "pct_inside": 1.511111111111111,
+      "mutations": 87.2,
+      "disruption": 3.651831863996387,
+      "reward": -11.93708319516182,
+      "action_share": [
+        0.105,
+        0.138,
+        0.117,
+        0.088,
+        0.19,
+        0.33,
+        0.031
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed3": {
+      "attacks": 4.3,
+      "succeeded": 1.0,
+      "pct_inside": 1.5111111111111115,
+      "mutations": 90.0,
+      "disruption": 3.896347185347974,
+      "reward": -11.706009371694922,
+      "action_share": [
+        0.107,
+        0.118,
+        0.112,
+        0.102,
+        0.2,
+        0.361,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed4": {
+      "attacks": 3.78,
+      "succeeded": 0.84,
+      "pct_inside": 1.3555555555555554,
+      "mutations": 89.92,
+      "disruption": 3.796481249470264,
+      "reward": -10.870443607013671,
+      "action_share": [
+        0.061,
+        0.1,
+        0.088,
+        0.076,
+        0.147,
+        0.527,
+        0.001
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed5": {
+      "attacks": 3.9,
+      "succeeded": 0.88,
+      "pct_inside": 1.3333333333333335,
+      "mutations": 87.28,
+      "disruption": 3.798214311443269,
+      "reward": -11.505376324236394,
+      "action_share": [
+        0.1,
+        0.148,
+        0.086,
+        0.113,
+        0.175,
+        0.347,
+        0.03
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed6": {
+      "attacks": 3.6,
+      "succeeded": 0.94,
+      "pct_inside": 1.4888888888888892,
+      "mutations": 87.72,
+      "disruption": 3.6527883173845708,
+      "reward": -11.663839383231847,
+      "action_share": [
+        0.116,
+        0.152,
+        0.149,
+        0.102,
+        0.169,
+        0.286,
+        0.025
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed7": {
+      "attacks": 4.42,
+      "succeeded": 0.8,
+      "pct_inside": 1.0888888888888888,
+      "mutations": 89.98,
+      "disruption": 3.8135244690902534,
+      "reward": -11.369611996730418,
+      "action_share": [
+        0.098,
+        0.111,
+        0.133,
+        0.093,
+        0.206,
+        0.359,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed8": {
+      "attacks": 4.1,
+      "succeeded": 0.94,
+      "pct_inside": 1.4444444444444446,
+      "mutations": 88.54,
+      "disruption": 3.801687039409578,
+      "reward": -11.2281015866071,
+      "action_share": [
+        0.059,
+        0.12,
+        0.07,
+        0.081,
+        0.177,
+        0.478,
+        0.016
+      ],
+      "collapsed": false
+    },
+    "ppo-fwrand_seed9": {
+      "attacks": 3.92,
+      "succeeded": 0.94,
+      "pct_inside": 1.4000000000000004,
+      "mutations": 89.54,
+      "disruption": 3.8781704692929986,
+      "reward": -11.505272481390836,
+      "action_share": [
+        0.097,
+        0.079,
+        0.11,
+        0.097,
+        0.151,
+        0.462,
+        0.005
+      ],
+      "collapsed": false
+    },
     "ghostnet_smart (v2)": {
       "attacks": 5.74,
       "succeeded": 4.12,
@@ -1179,6 +1359,32 @@
       "reward": [
         -10.389993317427562,
         0.7632660549798433
+      ]
+    },
+    "ppo-fwrand (10 seeds)": {
+      "attacks": [
+        4.064000000000001,
+        0.21570079029371522
+      ],
+      "succeeded": [
+        0.9179999999999999,
+        0.0853497078039651
+      ],
+      "pct_inside": [
+        1.428888888888889,
+        0.15900178946633883
+      ],
+      "mutations": [
+        88.96,
+        0.835731580512946
+      ],
+      "disruption": [
+        3.795810011855587,
+        0.06040063473728106
+      ],
+      "reward": [
+        -11.537439718732312,
+        0.25175679179999
       ]
     },
     "ppo-v2-original": {
@@ -1555,6 +1761,56 @@
         "ci95": [
           -1.0380460059106535,
           -0.16231195063266918
+        ],
+        "verdict": "real"
+      }
+    },
+    "ppo-fwrand vs ppo": {
+      "attacks": {
+        "mean": 1.7360000000000002,
+        "ci95": [
+          1.5320000000000003,
+          1.954
+        ],
+        "verdict": "real"
+      },
+      "succeeded": {
+        "mean": 0.22799999999999998,
+        "ci95": [
+          0.13599999999999998,
+          0.324
+        ],
+        "verdict": "real"
+      },
+      "pct_inside": {
+        "mean": 0.17777777777777767,
+        "ci95": [
+          -0.028888888888888964,
+          0.3777777777777777
+        ],
+        "verdict": "could be luck"
+      },
+      "mutations": {
+        "mean": 0.9600000000000003,
+        "ci95": [
+          0.6600000000000017,
+          1.2679999999999998
+        ],
+        "verdict": "real"
+      },
+      "disruption": {
+        "mean": 0.18466929864995182,
+        "ci95": [
+          0.16416676676430184,
+          0.20530203589541077
+        ],
+        "verdict": "real"
+      },
+      "reward": {
+        "mean": -1.7339595483023669,
+        "ci95": [
+          -2.1257513263198726,
+          -1.3183896406304128
         ],
         "verdict": "real"
       }

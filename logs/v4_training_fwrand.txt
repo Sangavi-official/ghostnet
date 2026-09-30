@@ -1,0 +1,10 @@
+  ppo-fwrand seed 4: done after   950 s -> models\v4\ppo-fwrand_seed4.zip
+  ppo-fwrand seed 8: done after   952 s -> models\v4\ppo-fwrand_seed8.zip
+  ppo-fwrand seed 1: done after   954 s -> models\v4\ppo-fwrand_seed1.zip
+  ppo-fwrand seed 0: done after   957 s -> models\v4\ppo-fwrand_seed0.zip
+  ppo-fwrand seed 7: done after   958 s -> models\v4\ppo-fwrand_seed7.zip
+  ppo-fwrand seed 5: done after   958 s -> models\v4\ppo-fwrand_seed5.zip
+  ppo-fwrand seed 6: done after   963 s -> models\v4\ppo-fwrand_seed6.zip
+  ppo-fwrand seed 2: done after   963 s -> models\v4\ppo-fwrand_seed2.zip
+  ppo-fwrand seed 3: done after   963 s -> models\v4\ppo-fwrand_seed3.zip
+  ppo-fwrand seed 9: done after   969 s -> models\v4\ppo-fwrand_seed9.zip
