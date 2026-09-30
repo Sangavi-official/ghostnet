@@ -119,7 +119,8 @@ class GhostNetEnvV4(gym.Env):
 
     STATE_DIM = 12
 
-    def __init__(self, chain="random", feeds=None, stages=9):
+    def __init__(self, chain="random", feeds=None, stages=9,
+                 mask_feeds=False, allow_hold=True):
         """
         chain  "random"  -> a new random sequence of TTPs every episode
                             (training: the agent cannot memorise one chain)
@@ -128,15 +129,22 @@ class GhostNetEnvV4(gym.Env):
                None      -> no attack, background scanning only
         feeds  None -> sampled uniformly per episode
                dict {5: cve, 6: shodan, 10: abuse, 11: attck} -> fixed
+
+        Ablations (the world itself is unchanged in both):
+        mask_feeds  True -> the defender sees 0 for indices 5, 6, 10, 11.
+                    Tests whether reading threat intelligence helps.
+        allow_hold  False -> 6 actions, no hold; the defender must mutate
+                    every step. Tests whether choosing WHEN helps.
         """
         super().__init__()
         self.chain_mode  = chain
         self.fixed_feeds = feeds
+        self.mask_feeds  = mask_feeds
         self.stages      = stages
         self.max_steps   = stages * STAGE_STEPS
 
         self.observation_space = gym.spaces.Box(0.0, 1.0, (self.STATE_DIM,), np.float32)
-        self.action_space      = gym.spaces.Discrete(7)
+        self.action_space      = gym.spaces.Discrete(7 if allow_hold else 6)
         self.state = None
 
     # ------------------------------------------------------------------
@@ -185,6 +193,8 @@ class GhostNetEnvV4(gym.Env):
         if OBS_NOISE > 0:
             o[0:N_SURFACES] = np.clip(
                 o[0:N_SURFACES] + self.np_random.normal(0, OBS_NOISE, N_SURFACES), 0, 1)
+        if self.mask_feeds:
+            o[list(FEED_IDX)] = 0.0
         return o.astype(np.float32)
 
     def _stage(self):

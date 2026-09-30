@@ -33,17 +33,19 @@ from ghostnet_env_v4 import GhostNetEnvV4, HOLD, N_SURFACES
 RESULTS = "eval_v4_rules.json"
 
 
-def run(policy, chain, seeds):
-    env = GhostNetEnvV4(chain=chain)
+def run(policy, chain, seeds, **env_kwargs):
+    env = GhostNetEnvV4(chain=chain, **env_kwargs)
     rows = []
     for seed in seeds:
         obs, _ = env.reset(seed=int(seed))
         rng = np.random.default_rng(seed)
         state = {"i": 0}
         tot = {"reward": 0.0, "hot": 0, "inside": 0, "mut": 0, "disr": 0.0}
+        acts = np.zeros(7, int)
         done = False
         while not done:
-            a = policy(obs, rng, state)
+            a = int(policy(obs, rng, state))
+            acts[a] += 1
             obs, rew, done, _, info = env.step(a)
             tot["reward"] += rew
             tot["hot"]    += info["n_hot"] > 0
@@ -62,7 +64,8 @@ def run(policy, chain, seeds):
                      "t_first": atk["first_compromise"] or n,
                      "pct_hot": 100 * tot["hot"] / n,
                      "mutations": tot["mut"],
-                     "disruption": tot["disr"]})
+                     "disruption": tot["disr"],
+                     **{f"act_{i}": int(c) for i, c in enumerate(acts)}})
     return rows
 
 
