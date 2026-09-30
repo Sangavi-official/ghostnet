@@ -15,14 +15,20 @@ API rate-limit exhaustion.
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+import os
 import requests
 from datetime import datetime, timedelta, timezone
 
 # ─── API CREDENTIALS ───────────────────────────────────────
-# Paste your own keys below. Each is free and instant to obtain.
-NIST_API_KEY      = "0a22271e-2d42-452e-abcb-fb0374583f64"
-SHODAN_API_KEY     = "xkj8RSp4CUje2FXyHJtaaI4tWh1nuWjs"
-ABUSEIPDB_API_KEY  = "ecea33fba3183fafe07fba0d510cf58750707d08203aba590570a4cebcfce7cf1ea6731de6e0d767"
+# Keys are read from environment variables, never from source.
+# Set them once per machine (then open a new terminal):
+#   setx GHOSTNET_NIST_KEY "..."
+#   setx GHOSTNET_SHODAN_KEY "..."
+#   setx GHOSTNET_ABUSEIPDB_KEY "..."
+# If a key is unset, that feed falls back to its default score.
+NIST_API_KEY      = os.environ.get("GHOSTNET_NIST_KEY", "")
+SHODAN_API_KEY    = os.environ.get("GHOSTNET_SHODAN_KEY", "")
+ABUSEIPDB_API_KEY = os.environ.get("GHOSTNET_ABUSEIPDB_KEY", "")
 # ────────────────────────────────────────────────────────────
 
 
