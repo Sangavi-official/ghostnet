@@ -10,6 +10,8 @@ Groups (found automatically in models/v4/, named <variant>_seed<k>.zip)
   dqn, a2c      rival learning algorithms
   ppo-nofeeds   ablation: threat-feed inputs hidden
   ppo-nohold    ablation: must mutate every step
+  ppo-fwrand    robust training (firewall strength random during training;
+                tested in the same fixed world as everyone else)
   plus the original v2 model ghostnet_smart.zip, run unchanged in the v4
   world (6 actions, never holds). It was trained in a different world,
   so it is a reference point, not a fair rival.
@@ -40,7 +42,7 @@ from stable_baselines3 import A2C, DQN, PPO
 
 from eval_v4 import run, static, rand, round_robin, greedy, threshold
 from ghostnet_env_v4 import ACTION_NAMES
-from train_v4 import VARIANTS
+from train_v4 import TRAIN_ONLY, VARIANTS
 
 RESULTS   = "eval_v4_agents.json"
 MODEL_DIR = os.path.join("models", "v4")
@@ -127,6 +129,7 @@ def main():
 
     for v in order:
         algo, _, env_kw = VARIANTS[v]
+        env_kw = {k: x for k, x in env_kw.items() if k not in TRAIN_ONLY}
         for p in groups[v]:
             evaluate(v, os.path.basename(p)[:-4], loaders[algo](p, device="cpu"), env_kw)
     if os.path.exists(V2_MODEL):

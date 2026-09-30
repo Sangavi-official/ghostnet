@@ -224,15 +224,30 @@ def rotate_mqtt_topic_placeholder():
 
 
 def update_firewall():
-    """Read-only posture review. Reports unverified and orphaned mutations."""
+    """
+    Action 5 — REAL since 30 Sept 2026: blocks every high-confidence
+    AbuseIPDB address on the EC2 host firewall (ipset + iptables) and
+    verifies the block on the host. See host_firewall.py.
+    Earlier results used the read-only review below; say so in the paper.
+    """
+    try:
+        from host_firewall import update_blocklist
+        ok, detail, _changed = update_blocklist()
+        return log_mutation("update_firewall", detail, ok)
+    except Exception as e:
+        return log_mutation("update_firewall", f"{type(e).__name__}: {e}", False)
+
+
+def firewall_posture_review():
+    """The former action 5: read-only review of unverified and orphaned ports."""
     try:
         ports = get_current_rules()
         orphans = [p for p in ports
                    if p not in cfg.PROTECTED_PORTS and p != ledger.get_config("test_port")]
         note = f" | ORPHAN PORTS: {orphans}" if orphans else ""
-        return log_mutation("update_firewall", f"Ports: {ports}{note} [READ-ONLY]", True)
+        return log_mutation("firewall_posture_review", f"Ports: {ports}{note} [READ-ONLY]", True)
     except Exception as e:
-        return log_mutation("update_firewall", str(e), False)
+        return log_mutation("firewall_posture_review", str(e), False)
 
 
 ACTION_MAP = {

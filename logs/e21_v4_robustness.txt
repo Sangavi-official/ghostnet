@@ -1,0 +1,41 @@
+
+  Breaches per game (AIIMS chain, 50 games; PPO/DQN = mean of 10 models)
+  setting                    Round-robin        Greedy Threshold 0.3           PPO           DQN     PPO - Greedy [95% CI]
+  --------------------------------------------------------------------------------------------------------------------------------------
+  as trained                        3.00          0.88          0.88          0.69          0.72     -0.19 [-0.44, +0.05] could be luck
+  firewall cut 0.10                 3.00          0.88          0.88          1.69          1.13     +0.81 [+0.54, +1.08] real
+  firewall cut 0.05                 3.00          0.88          0.88          2.65          1.40     +1.77 [+1.43, +2.11] real
+  firewall does nothing             3.00          0.88          0.88          4.04          1.90     +3.16 [+2.68, +3.65] real
+  attacker slower 0.20              0.00          0.02          0.02          0.00          0.00     -0.02 [-0.06, +0.01] could be luck
+  attacker faster 0.35              8.56          2.12          2.34          2.08          1.91     -0.04 [-0.30, +0.22] could be luck
+  perfect view (no blur)            3.08          0.12          0.12          0.12          0.18     -0.00 [-0.11, +0.09] could be luck
+  blurrier view 0.20                3.00          1.44          1.28          1.11          1.04     -0.33 [-0.63, -0.05] real
+  exploit takes 2 steps             0.00          0.00          0.00          0.03          0.02     +0.03 [+0.01, +0.07] real
+
+  % of time the attacker is inside (AIIMS chain, 50 games; PPO/DQN = mean of 10 models)
+  setting                    Round-robin        Greedy Threshold 0.3           PPO           DQN     PPO - Greedy [95% CI]
+  --------------------------------------------------------------------------------------------------------------------------------------
+  as trained                        3.36          1.20          1.07          1.25          1.14     +0.05 [-0.34, +0.43] could be luck
+  firewall cut 0.10                 3.36          1.20          1.07          3.47          1.92     +2.27 [+1.74, +2.82] real
+  firewall cut 0.05                 3.36          1.20          1.07          6.04          2.29     +4.84 [+3.88, +5.94] real
+  firewall does nothing             3.36          1.20          1.07         11.34          3.06     +10.14 [+8.28, +12.17] real
+  attacker slower 0.20              0.00          0.02          0.02          0.00          0.00     -0.02 [-0.07, +0.01] could be luck
+  attacker faster 0.35              9.98          3.22          3.33          4.32          3.65     +1.09 [+0.61, +1.56] real
+  perfect view (no blur)            3.42          0.13          0.13          0.21          0.23     +0.08 [-0.07, +0.24] could be luck
+  blurrier view 0.20                3.36          2.07          1.93          2.22          1.82     +0.16 [-0.42, +0.72] could be luck
+  exploit takes 2 steps             0.00          0.00          0.00          0.10          0.03     +0.10 [+0.02, +0.22] real
+
+  Disruption to the hospital (AIIMS chain, 50 games; PPO/DQN = mean of 10 models)
+  setting                    Round-robin        Greedy Threshold 0.3           PPO           DQN     PPO - Greedy [95% CI]
+  --------------------------------------------------------------------------------------------------------------------------------------
+  as trained                        4.09          4.15          4.03          3.61          3.45     -0.54 [-0.61, -0.47] real
+  firewall cut 0.10                 4.09          4.15          4.03          3.71          3.63     -0.44 [-0.51, -0.38] real
+  firewall cut 0.05                 4.09          4.15          4.03          3.78          3.83     -0.37 [-0.44, -0.31] real
+  firewall does nothing             4.09          4.15          4.03          3.85          3.94     -0.30 [-0.36, -0.23] real
+  attacker slower 0.20              4.09          4.13          3.92          3.35          2.99     -0.77 [-0.86, -0.69] real
+  attacker faster 0.35              4.09          4.17          4.07          3.71          3.58     -0.47 [-0.53, -0.40] real
+  perfect view (no blur)            4.07          4.13          3.99          3.56          3.41     -0.57 [-0.62, -0.52] real
+  blurrier view 0.20                4.09          4.16          4.06          3.64          3.51     -0.51 [-0.59, -0.44] real
+  exploit takes 2 steps             4.07          4.13          3.99          3.56          3.41     -0.57 [-0.62, -0.52] real
+
+  Written to robustness_v4.json

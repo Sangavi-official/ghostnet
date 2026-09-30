@@ -55,7 +55,8 @@ def executor_for(action):
     except Exception:
         return None
 
-# Capability truth, verified against the code on 2026-09-20.
+# Capability truth, verified against the code on 2026-09-20 (action 5
+# updated 2026-09-30 when update_firewall became a real host-firewall change).
 # Shown verbatim in the UI. Update here if the implementation changes.
 ACTION_STATUS = {
     0: ("PARTIAL",  "Writes a Security Group tag. Not an EC2 public-IP replacement."),
@@ -64,7 +65,8 @@ ACTION_STATUS = {
     2: ("PARTIAL",  "Writes api_path_mapping.json. No live API gateway is reconfigured."),
     3: ("GATED",    "Broker relocation. Disabled unless GHOSTNET_ALLOW_BROKER_HOP=1."),
     4: ("VERIFIED", "Real MQTT control message, confirmed by telemetry on the new topic."),
-    5: ("PARTIAL",  "Read-only posture review in the cloud executor."),
+    5: ("VERIFIED", "Blocks AbuseIPDB high-confidence IPs on the EC2 host firewall "
+                    "(ipset + iptables), confirmed on the host. Unchanged list = NO CHANGE."),
 }
 
 LEDGER_PATH = os.environ.get("GHOSTNET_LEDGER", "mutation_ledger.json")

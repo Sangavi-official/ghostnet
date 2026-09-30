@@ -105,6 +105,12 @@ FEED_PRESSURE = {
     11: {4: 0.03, 3: 0.01},   # ATT&CK health  -> IoT / MQTT techniques
 }
 
+# Broad firewall action: lowers every surface's exposure by this much.
+# Modelling assumption. The live action (host_firewall.py) only helps
+# when the AbuseIPDB blocklist actually changes, so robustness_v4.py
+# re-tests the trained agents with weaker values (0.10, 0.05, 0.0).
+FIREWALL_CUT = 0.15
+
 # Disruption to the hospital caused by each action (before traffic
 # scaling). IoT actions interrupt pump telemetry, so they cost more.
 DISRUPTION = [0.03, 0.02, 0.03, 0.10, 0.05, 0.04, 0.0]
@@ -120,7 +126,7 @@ class GhostNetEnvV4(gym.Env):
     STATE_DIM = 12
 
     def __init__(self, chain="random", feeds=None, stages=9,
-                 mask_feeds=False, allow_hold=True):
+                 mask_feeds=False, allow_hold=True, firewall_cut_range=None):
         """
         chain  "random"  -> a new random sequence of TTPs every episode
                             (training: the agent cannot memorise one chain)
@@ -135,11 +141,18 @@ class GhostNetEnvV4(gym.Env):
                     Tests whether reading threat intelligence helps.
         allow_hold  False -> 6 actions, no hold; the defender must mutate
                     every step. Tests whether choosing WHEN helps.
+
+        Robust training (training worlds only, never the test world):
+        firewall_cut_range  (lo, hi) -> each episode draws the firewall's
+                    strength uniformly from this range, so the agent cannot
+                    rely on one modelled value. None -> FIREWALL_CUT.
         """
         super().__init__()
         self.chain_mode  = chain
         self.fixed_feeds = feeds
         self.mask_feeds  = mask_feeds
+        self.fw_range    = firewall_cut_range
+        self.fw_cut      = None
         self.stages      = stages
         self.max_steps   = stages * STAGE_STEPS
 
@@ -184,6 +197,9 @@ class GhostNetEnvV4(gym.Env):
         self.compromised = np.zeros(N_SURFACES, dtype=bool)
         self.stats = {"launched": 0, "succeeded": 0, "foiled": 0,
                       "evicted": 0, "first_compromise": None}
+        # Drawn last, and only for robust training, so the default
+        # random stream (and every reported result) is unchanged.
+        self.fw_cut = float(r.uniform(*self.fw_range)) if self.fw_range else None
         return self._observe(), {"chain": self.chain}
 
     # ------------------------------------------------------------------
@@ -218,7 +234,8 @@ class GhostNetEnvV4(gym.Env):
                 self.compromised[action] = False
                 evicted = 1
         elif action == 5:
-            s[0:N_SURFACES] = np.maximum(0.0, s[0:N_SURFACES] - 0.15)
+            cut = FIREWALL_CUT if self.fw_cut is None else self.fw_cut
+            s[0:N_SURFACES] = np.maximum(0.0, s[0:N_SURFACES] - cut)
         mutated = action != HOLD
         self.since_mut = 0 if mutated else self.since_mut + 1
         disruption = DISRUPTION[action] * (0.5 + traffic)

@@ -19,6 +19,7 @@ Variants
   dqn, a2c      rival learning algorithms
   ppo-nofeeds   ablation: threat-feed inputs hidden from the agent
   ppo-nohold    ablation: no hold action, must mutate every step
+  ppo-fwrand    robust training: firewall strength random per episode
 
     python train_v4.py                       # ppo, seeds 0-9, 300k steps
     python train_v4.py --variant dqn
@@ -50,7 +51,15 @@ VARIANTS = {
     "a2c":         (A2C, dict(gamma=0.99), {}),
     "ppo-nofeeds": (PPO, PPO_KW, {"mask_feeds": True}),
     "ppo-nohold":  (PPO, PPO_KW, {"allow_hold": False}),
+    # Robust training: the firewall's strength is unknown to the agent
+    # (uniform from "does nothing" to the modelled value, per episode).
+    # Added after robustness_v4.py showed PPO over-relies on action 5.
+    "ppo-fwrand":  (PPO, PPO_KW, {"firewall_cut_range": (0.0, 0.15)}),
 }
+
+# Environment options that describe the TRAINING world only. Evaluation
+# drops them, so every agent is tested in the same world.
+TRAIN_ONLY = ("firewall_cut_range",)
 
 
 def train_one(variant, seed, steps):

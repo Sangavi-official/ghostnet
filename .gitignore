@@ -52,3 +52,6 @@ mutation_ledger.json.tmp
 dashboard/events.jsonl
 ledger_selftest.json
 __pycache__/
+
+# host firewall blocklist cache (regenerated from AbuseIPDB)
+abuse_blocklist.json

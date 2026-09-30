@@ -17,14 +17,29 @@ the broker's own listeners, or it severs its own control channel and the
 patient telemetry path.
 """
 
+import json
 import os
 
 # ─── AWS ────────────────────────────────────────────────────────────
 AWS_REGION        = os.getenv("GHOSTNET_AWS_REGION", "ap-south-1")
 SECURITY_GROUP_ID = os.getenv("GHOSTNET_SG_ID", "sg-011b5416a5dfa61b8")
 
+
+def _ledger_host():
+    """Public IP recorded by the last VERIFIED cloud-IP rotation (action 0)."""
+    try:
+        with open(os.getenv("GHOSTNET_LEDGER", "mutation_ledger.json")) as f:
+            return json.load(f).get("config", {}).get("ec2_host")
+    except Exception:
+        return None
+
+
 # ─── EC2 / IoT host ─────────────────────────────────────────────────
-EC2_HOST = os.getenv("GHOSTNET_EC2_HOST", "13.206.71.17")   # changes on stop/start
+# Precedence: the ledger (written only after action 0 verifies a new
+# Elastic IP) > GHOSTNET_EC2_HOST > default. Every module reads
+# cfg.EC2_HOST at call time, so a rotation is followed everywhere.
+# With an Elastic IP attached the address also survives stop/start.
+EC2_HOST = _ledger_host() or os.getenv("GHOSTNET_EC2_HOST", "13.206.71.17")
 EC2_USER = os.getenv("GHOSTNET_EC2_USER", "ubuntu")
 KEY_PATH = os.getenv("GHOSTNET_KEY_PATH",
                      r"C:\Users\nazee\OneDrive\Documents\capstone-project\ghostnet-iot-key.pem")
@@ -53,6 +68,21 @@ CIDR = os.getenv("GHOSTNET_CIDR", "0.0.0.0/0")   # lab only; scope this for real
 #     $env:GHOSTNET_ALLOW_BROKER_HOP = "1"
 ALLOW_BROKER_HOP = os.getenv("GHOSTNET_ALLOW_BROKER_HOP", "0") == "1"
 
+# ─── Cloud IP rotation interlock (action 0) ─────────────────────────
+# A real Elastic IP swap changes the address every external client uses
+# and briefly drops their connections (the pump runs on the host and is
+# not affected). Like the broker hop it is opt-in:
+#     $env:GHOSTNET_ALLOW_IP_ROTATION = "1"
+# When disabled, action 0 falls back to the old Security Group TAG
+# rotation, which is reported as PARTIAL.
+ALLOW_IP_ROTATION = os.getenv("GHOSTNET_ALLOW_IP_ROTATION", "0") == "1"
+
+# ─── Live API gateway (action 2) ────────────────────────────────────
+# nginx on the EC2 serves the demo clinical API at a secret path that
+# action 2 rotates. Must be open in the Security Group and outside the
+# mutable port range (so cleanup never closes it).
+API_PORT = int(os.getenv("GHOSTNET_API_PORT", "80"))
+
 
 def describe():
     print("  " + "-" * 58)
@@ -61,6 +91,9 @@ def describe():
     print(f"  key    {KEY_PATH}")
     print(f"  mutable ports {MUTABLE_PORT_RANGE} | protected {sorted(PROTECTED_PORTS)}")
     print(f"  broker hop: {'ENABLED' if ALLOW_BROKER_HOP else 'disabled (experiment only)'}")
+    print(f"  ip rotation: {'ENABLED (Elastic IP swap)' if ALLOW_IP_ROTATION else 'disabled (tag only)'}"
+          f"{' | host from ledger' if _ledger_host() else ''}")
+    print(f"  api gateway: nginx on :{API_PORT}")
     print("  " + "-" * 58)
 
 

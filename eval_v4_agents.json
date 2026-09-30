@@ -181,6 +181,726 @@
       ],
       "collapsed": false
     },
+    "dqn_seed0": {
+      "attacks": 2.76,
+      "succeeded": 0.72,
+      "pct_inside": 1.3111111111111111,
+      "mutations": 80.9,
+      "disruption": 3.499595686579496,
+      "reward": -9.90104330426678,
+      "action_share": [
+        0.051,
+        0.052,
+        0.043,
+        0.053,
+        0.158,
+        0.542,
+        0.101
+      ],
+      "collapsed": false
+    },
+    "dqn_seed1": {
+      "attacks": 2.84,
+      "succeeded": 0.82,
+      "pct_inside": 1.2444444444444445,
+      "mutations": 85.26,
+      "disruption": 3.4516970161005855,
+      "reward": -10.072624751950801,
+      "action_share": [
+        0.03,
+        0.116,
+        0.058,
+        0.046,
+        0.087,
+        0.61,
+        0.053
+      ],
+      "collapsed": false
+    },
+    "dqn_seed2": {
+      "attacks": 2.94,
+      "succeeded": 0.84,
+      "pct_inside": 1.1111111111111112,
+      "mutations": 82.72,
+      "disruption": 3.4845498075991865,
+      "reward": -9.749811783654987,
+      "action_share": [
+        0.04,
+        0.058,
+        0.064,
+        0.051,
+        0.119,
+        0.587,
+        0.081
+      ],
+      "collapsed": false
+    },
+    "dqn_seed3": {
+      "attacks": 2.92,
+      "succeeded": 0.62,
+      "pct_inside": 0.8888888888888888,
+      "mutations": 83.62,
+      "disruption": 3.4765684497997165,
+      "reward": -9.140623220291735,
+      "action_share": [
+        0.028,
+        0.041,
+        0.049,
+        0.042,
+        0.116,
+        0.653,
+        0.071
+      ],
+      "collapsed": false
+    },
+    "dqn_seed4": {
+      "attacks": 2.68,
+      "succeeded": 0.7,
+      "pct_inside": 1.0666666666666667,
+      "mutations": 79.38,
+      "disruption": 3.3289403317853807,
+      "reward": -9.35826365145892,
+      "action_share": [
+        0.044,
+        0.06,
+        0.072,
+        0.044,
+        0.148,
+        0.514,
+        0.118
+      ],
+      "collapsed": false
+    },
+    "dqn_seed5": {
+      "attacks": 2.98,
+      "succeeded": 0.8,
+      "pct_inside": 1.3111111111111113,
+      "mutations": 82.84,
+      "disruption": 3.5027725609190763,
+      "reward": -10.06554232140109,
+      "action_share": [
+        0.043,
+        0.063,
+        0.126,
+        0.058,
+        0.148,
+        0.484,
+        0.08
+      ],
+      "collapsed": false
+    },
+    "dqn_seed6": {
+      "attacks": 2.64,
+      "succeeded": 0.74,
+      "pct_inside": 1.3333333333333335,
+      "mutations": 84.6,
+      "disruption": 3.5129900164797903,
+      "reward": -9.603360695552826,
+      "action_share": [
+        0.037,
+        0.064,
+        0.038,
+        0.053,
+        0.102,
+        0.645,
+        0.06
+      ],
+      "collapsed": false
+    },
+    "dqn_seed7": {
+      "attacks": 2.56,
+      "succeeded": 0.7,
+      "pct_inside": 1.1333333333333333,
+      "mutations": 79.62,
+      "disruption": 3.3951745473735024,
+      "reward": -9.571114186889679,
+      "action_share": [
+        0.062,
+        0.058,
+        0.04,
+        0.052,
+        0.113,
+        0.559,
+        0.115
+      ],
+      "collapsed": false
+    },
+    "dqn_seed8": {
+      "attacks": 2.2,
+      "succeeded": 0.64,
+      "pct_inside": 0.9999999999999999,
+      "mutations": 84.4,
+      "disruption": 3.45216786839515,
+      "reward": -9.218498512779178,
+      "action_share": [
+        0.029,
+        0.051,
+        0.08,
+        0.038,
+        0.109,
+        0.632,
+        0.062
+      ],
+      "collapsed": false
+    },
+    "dqn_seed9": {
+      "attacks": 2.74,
+      "succeeded": 0.6,
+      "pct_inside": 1.0222222222222224,
+      "mutations": 83.0,
+      "disruption": 3.3857200181573637,
+      "reward": -9.427817357429861,
+      "action_share": [
+        0.047,
+        0.131,
+        0.066,
+        0.057,
+        0.141,
+        0.48,
+        0.078
+      ],
+      "collapsed": false
+    },
+    "a2c_seed0": {
+      "attacks": 0.58,
+      "succeeded": 0.32,
+      "pct_inside": 6.0888888888888895,
+      "mutations": 90.0,
+      "disruption": 3.7291943277865647,
+      "reward": -14.752921978197994,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.017,
+        0.092,
+        0.891,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "a2c_seed1": {
+      "attacks": 1.54,
+      "succeeded": 1.2,
+      "pct_inside": 10.53333333333333,
+      "mutations": 90.0,
+      "disruption": 3.5852992904931313,
+      "reward": -20.460117123477165,
+      "action_share": [
+        0.0,
+        0.0,
+        0.021,
+        0.0,
+        0.037,
+        0.942,
+        0.0
+      ],
+      "collapsed": true
+    },
+    "a2c_seed2": {
+      "attacks": 1.1,
+      "succeeded": 1.06,
+      "pct_inside": 16.266666666666666,
+      "mutations": 90.0,
+      "disruption": 3.6389334875762467,
+      "reward": -26.930418312315645,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.112,
+        0.888,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "a2c_seed3": {
+      "attacks": 1.14,
+      "succeeded": 0.94,
+      "pct_inside": 8.666666666666666,
+      "mutations": 90.0,
+      "disruption": 3.589446042130888,
+      "reward": -19.312142590659857,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.052,
+        0.948,
+        0.0
+      ],
+      "collapsed": true
+    },
+    "a2c_seed4": {
+      "attacks": 1.14,
+      "succeeded": 0.74,
+      "pct_inside": 3.711111111111111,
+      "mutations": 90.0,
+      "disruption": 3.431805507563055,
+      "reward": -13.242133893840014,
+      "action_share": [
+        0.0,
+        0.124,
+        0.04,
+        0.011,
+        0.065,
+        0.76,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "a2c_seed5": {
+      "attacks": 1.0,
+      "succeeded": 0.8,
+      "pct_inside": 10.288888888888886,
+      "mutations": 90.0,
+      "disruption": 3.614473208546639,
+      "reward": -19.940660016559065,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.077,
+        0.923,
+        0.0
+      ],
+      "collapsed": true
+    },
+    "a2c_seed6": {
+      "attacks": 1.04,
+      "succeeded": 0.96,
+      "pct_inside": 12.4,
+      "mutations": 90.0,
+      "disruption": 3.6592358122766018,
+      "reward": -22.582403826296336,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.117,
+        0.883,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "a2c_seed7": {
+      "attacks": 1.0,
+      "succeeded": 0.88,
+      "pct_inside": 9.177777777777777,
+      "mutations": 90.0,
+      "disruption": 3.606466842883825,
+      "reward": -18.70034176544994,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.068,
+        0.932,
+        0.0
+      ],
+      "collapsed": true
+    },
+    "a2c_seed8": {
+      "attacks": 1.0,
+      "succeeded": 0.98,
+      "pct_inside": 12.6,
+      "mutations": 90.0,
+      "disruption": 3.6273433568060396,
+      "reward": -23.046587894502284,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.106,
+        0.894,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "a2c_seed9": {
+      "attacks": 1.1,
+      "succeeded": 0.86,
+      "pct_inside": 11.644444444444444,
+      "mutations": 90.0,
+      "disruption": 3.6229394414156677,
+      "reward": -21.842698405678565,
+      "action_share": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.08,
+        0.92,
+        0.0
+      ],
+      "collapsed": true
+    },
+    "ppo-nofeeds_seed0": {
+      "attacks": 1.56,
+      "succeeded": 0.62,
+      "pct_inside": 1.8444444444444443,
+      "mutations": 89.76,
+      "disruption": 3.637427644186467,
+      "reward": -10.141121636965124,
+      "action_share": [
+        0.028,
+        0.067,
+        0.087,
+        0.033,
+        0.148,
+        0.634,
+        0.003
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed1": {
+      "attacks": 1.86,
+      "succeeded": 0.66,
+      "pct_inside": 2.2,
+      "mutations": 82.84,
+      "disruption": 3.576178400190175,
+      "reward": -10.584652623729404,
+      "action_share": [
+        0.025,
+        0.062,
+        0.033,
+        0.05,
+        0.184,
+        0.566,
+        0.08
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed2": {
+      "attacks": 2.12,
+      "succeeded": 0.84,
+      "pct_inside": 1.777777777777778,
+      "mutations": 86.2,
+      "disruption": 3.5450734701238575,
+      "reward": -10.299068699576706,
+      "action_share": [
+        0.046,
+        0.106,
+        0.099,
+        0.055,
+        0.158,
+        0.493,
+        0.042
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed3": {
+      "attacks": 0.74,
+      "succeeded": 0.48,
+      "pct_inside": 1.511111111111111,
+      "mutations": 84.46,
+      "disruption": 3.46523079245612,
+      "reward": -9.105354548149556,
+      "action_share": [
+        0.02,
+        0.04,
+        0.034,
+        0.025,
+        0.1,
+        0.719,
+        0.062
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed4": {
+      "attacks": 1.92,
+      "succeeded": 0.76,
+      "pct_inside": 1.3777777777777778,
+      "mutations": 88.02,
+      "disruption": 3.4831776617906987,
+      "reward": -9.979568249791116,
+      "action_share": [
+        0.1,
+        0.129,
+        0.066,
+        0.048,
+        0.116,
+        0.52,
+        0.022
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed5": {
+      "attacks": 1.24,
+      "succeeded": 0.52,
+      "pct_inside": 1.3333333333333337,
+      "mutations": 90.0,
+      "disruption": 3.627554322839529,
+      "reward": -9.05480169230774,
+      "action_share": [
+        0.023,
+        0.062,
+        0.037,
+        0.025,
+        0.104,
+        0.748,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed6": {
+      "attacks": 1.86,
+      "succeeded": 0.6,
+      "pct_inside": 0.8888888888888888,
+      "mutations": 87.68,
+      "disruption": 3.5456168374687436,
+      "reward": -8.941817215745152,
+      "action_share": [
+        0.03,
+        0.102,
+        0.054,
+        0.044,
+        0.097,
+        0.648,
+        0.026
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed7": {
+      "attacks": 0.88,
+      "succeeded": 0.4,
+      "pct_inside": 1.0666666666666667,
+      "mutations": 83.94,
+      "disruption": 3.4240513330914086,
+      "reward": -9.00355288497284,
+      "action_share": [
+        0.052,
+        0.061,
+        0.031,
+        0.032,
+        0.111,
+        0.646,
+        0.067
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed8": {
+      "attacks": 0.82,
+      "succeeded": 0.58,
+      "pct_inside": 3.1111111111111116,
+      "mutations": 86.7,
+      "disruption": 3.6021052842155097,
+      "reward": -10.890665619464219,
+      "action_share": [
+        0.001,
+        0.022,
+        0.042,
+        0.029,
+        0.129,
+        0.741,
+        0.037
+      ],
+      "collapsed": false
+    },
+    "ppo-nofeeds_seed9": {
+      "attacks": 1.86,
+      "succeeded": 0.72,
+      "pct_inside": 1.1555555555555557,
+      "mutations": 86.96,
+      "disruption": 3.5006863860912625,
+      "reward": -9.383004935307056,
+      "action_share": [
+        0.062,
+        0.125,
+        0.057,
+        0.05,
+        0.121,
+        0.553,
+        0.034
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed0": {
+      "attacks": 1.7,
+      "succeeded": 0.64,
+      "pct_inside": 1.5333333333333334,
+      "mutations": 90.0,
+      "disruption": 3.657919304832815,
+      "reward": -9.75819600699097,
+      "action_share": [
+        0.043,
+        0.078,
+        0.034,
+        0.046,
+        0.097,
+        0.702,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed1": {
+      "attacks": 1.62,
+      "succeeded": 0.58,
+      "pct_inside": 1.1777777777777778,
+      "mutations": 90.0,
+      "disruption": 3.6336417350679637,
+      "reward": -9.321190165935457,
+      "action_share": [
+        0.04,
+        0.088,
+        0.056,
+        0.041,
+        0.105,
+        0.67,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed2": {
+      "attacks": 1.38,
+      "succeeded": 0.64,
+      "pct_inside": 2.0444444444444443,
+      "mutations": 90.0,
+      "disruption": 3.6466592435225844,
+      "reward": -10.474918506687882,
+      "action_share": [
+        0.016,
+        0.036,
+        0.026,
+        0.02,
+        0.085,
+        0.816,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed3": {
+      "attacks": 2.0,
+      "succeeded": 0.54,
+      "pct_inside": 0.9555555555555556,
+      "mutations": 90.0,
+      "disruption": 3.6499580012664206,
+      "reward": -9.021987608025968,
+      "action_share": [
+        0.047,
+        0.08,
+        0.052,
+        0.04,
+        0.106,
+        0.675,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed4": {
+      "attacks": 2.04,
+      "succeeded": 0.82,
+      "pct_inside": 1.7333333333333332,
+      "mutations": 90.0,
+      "disruption": 3.6878313211895533,
+      "reward": -10.225480352314563,
+      "action_share": [
+        0.033,
+        0.078,
+        0.04,
+        0.038,
+        0.126,
+        0.686,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed5": {
+      "attacks": 2.14,
+      "succeeded": 0.8,
+      "pct_inside": 1.5555555555555554,
+      "mutations": 90.0,
+      "disruption": 3.8337083795830607,
+      "reward": -10.198379511618615,
+      "action_share": [
+        0.022,
+        0.078,
+        0.052,
+        0.062,
+        0.144,
+        0.644,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed6": {
+      "attacks": 2.08,
+      "succeeded": 0.86,
+      "pct_inside": 2.5555555555555554,
+      "mutations": 90.0,
+      "disruption": 3.9253446356117716,
+      "reward": -11.262444667427241,
+      "action_share": [
+        0.014,
+        0.05,
+        0.029,
+        0.07,
+        0.114,
+        0.723,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed7": {
+      "attacks": 1.26,
+      "succeeded": 0.68,
+      "pct_inside": 2.8222222222222224,
+      "mutations": 90.0,
+      "disruption": 3.8449918572574853,
+      "reward": -11.880106386360525,
+      "action_share": [
+        0.018,
+        0.09,
+        0.04,
+        0.069,
+        0.126,
+        0.657,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed8": {
+      "attacks": 2.16,
+      "succeeded": 0.96,
+      "pct_inside": 2.9555555555555553,
+      "mutations": 90.0,
+      "disruption": 3.9234609410136936,
+      "reward": -12.167488164429367,
+      "action_share": [
+        0.027,
+        0.037,
+        0.038,
+        0.077,
+        0.115,
+        0.705,
+        0.0
+      ],
+      "collapsed": false
+    },
+    "ppo-nohold_seed9": {
+      "attacks": 2.06,
+      "succeeded": 0.66,
+      "pct_inside": 1.4444444444444442,
+      "mutations": 90.0,
+      "disruption": 3.7080141438886525,
+      "reward": -9.589741804485023,
+      "action_share": [
+        0.047,
+        0.036,
+        0.067,
+        0.036,
+        0.135,
+        0.679,
+        0.0
+      ],
+      "collapsed": false
+    },
     "ghostnet_smart (v2)": {
       "attacks": 5.74,
       "succeeded": 4.12,
@@ -357,6 +1077,110 @@
         0.5717914033819158
       ]
     },
+    "dqn (10 seeds)": {
+      "attacks": [
+        2.726,
+        0.16436483484411532
+      ],
+      "succeeded": [
+        0.7179999999999999,
+        0.05967997765861958
+      ],
+      "pct_inside": [
+        1.1422222222222222,
+        0.10905921272082748
+      ],
+      "mutations": [
+        82.634,
+        1.4630043663031982
+      ],
+      "disruption": [
+        3.449017630318925,
+        0.04321212709439093
+      ],
+      "reward": [
+        -9.610869978567585,
+        0.23792603196867998
+      ]
+    },
+    "a2c (10 seeds)": {
+      "attacks": [
+        1.0639999999999998,
+        0.16638948898426378
+      ],
+      "succeeded": [
+        0.874,
+        0.1675112514960645
+      ],
+      "pct_inside": [
+        10.137777777777776,
+        2.5208442875087638
+      ],
+      "mutations": [
+        90.0,
+        0.0
+      ],
+      "disruption": [
+        3.610513731747866,
+        0.05366808306602621
+      ],
+      "reward": [
+        -20.081042580697687,
+        2.8476511598314564
+      ]
+    },
+    "ppo-nofeeds (10 seeds)": {
+      "attacks": [
+        1.486,
+        0.3723661970575621
+      ],
+      "succeeded": [
+        0.618,
+        0.09515885291915242
+      ],
+      "pct_inside": [
+        1.6266666666666665,
+        0.4670516657620264
+      ],
+      "mutations": [
+        86.656,
+        1.6977506155826045
+      ],
+      "disruption": [
+        3.5407102132453767,
+        0.05119616936534058
+      ],
+      "reward": [
+        -9.738360810600891,
+        0.519060280878656
+      ]
+    },
+    "ppo-nohold (10 seeds)": {
+      "attacks": [
+        1.8439999999999999,
+        0.23581138376064698
+      ],
+      "succeeded": [
+        0.7180000000000001,
+        0.09634423559992228
+      ],
+      "pct_inside": [
+        1.8777777777777778,
+        0.49470234361598636
+      ],
+      "mutations": [
+        90.0,
+        0.0
+      ],
+      "disruption": [
+        3.7511529563234,
+        0.08428761911714684
+      ],
+      "reward": [
+        -10.389993317427562,
+        0.7632660549798433
+      ]
+    },
     "ppo-v2-original": {
       "attacks": [
         5.74,
@@ -386,6 +1210,14 @@
   },
   "paired": {
     "ppo vs Greedy (every step)": {
+      "attacks": {
+        "mean": -2.1519999999999997,
+        "ci95": [
+          -2.57,
+          -1.756
+        ],
+        "verdict": "real"
+      },
       "succeeded": {
         "mean": -0.19000000000000003,
         "ci95": [
@@ -401,6 +1233,14 @@
           0.43111111111111106
         ],
         "verdict": "could be luck"
+      },
+      "mutations": {
+        "mean": -2.0,
+        "ci95": [
+          -2.3200000000000003,
+          -1.6900000000000006
+        ],
+        "verdict": "real"
       },
       "disruption": {
         "mean": -0.5414854882906377,
@@ -420,6 +1260,14 @@
       }
     },
     "ppo vs Threshold (tau=0.3)": {
+      "attacks": {
+        "mean": -2.3520000000000003,
+        "ci95": [
+          -2.722,
+          -1.976
+        ],
+        "verdict": "real"
+      },
       "succeeded": {
         "mean": -0.19000000000000003,
         "ci95": [
@@ -435,6 +1283,14 @@
           0.5777777777777778
         ],
         "verdict": "could be luck"
+      },
+      "mutations": {
+        "mean": 0.98,
+        "ci95": [
+          0.46800000000000097,
+          1.524
+        ],
+        "verdict": "real"
       },
       "disruption": {
         "mean": -0.41604751345768565,
@@ -454,6 +1310,14 @@
       }
     },
     "ppo vs Round-robin": {
+      "attacks": {
+        "mean": -11.532,
+        "ci95": [
+          -12.176050000000002,
+          -10.864
+        ],
+        "verdict": "real"
+      },
       "succeeded": {
         "mean": -2.31,
         "ci95": [
@@ -467,6 +1331,14 @@
         "ci95": [
           -2.6133333333333337,
           -1.606666666666667
+        ],
+        "verdict": "real"
+      },
+      "mutations": {
+        "mean": -2.0,
+        "ci95": [
+          -2.3200000000000003,
+          -1.6900000000000006
         ],
         "verdict": "real"
       },
@@ -487,7 +1359,215 @@
         "verdict": "real"
       }
     },
+    "dqn vs ppo": {
+      "attacks": {
+        "mean": 0.39799999999999996,
+        "ci95": [
+          0.22399999999999998,
+          0.5660000000000001
+        ],
+        "verdict": "real"
+      },
+      "succeeded": {
+        "mean": 0.02800000000000001,
+        "ci95": [
+          -0.05600000000000001,
+          0.11
+        ],
+        "verdict": "could be luck"
+      },
+      "pct_inside": {
+        "mean": -0.10888888888888898,
+        "ci95": [
+          -0.268888888888889,
+          0.04666666666666657
+        ],
+        "verdict": "could be luck"
+      },
+      "mutations": {
+        "mean": -5.366000000000001,
+        "ci95": [
+          -6.276000000000002,
+          -4.490000000000001
+        ],
+        "verdict": "real"
+      },
+      "disruption": {
+        "mean": -0.16212308288671068,
+        "ci95": [
+          -0.20261846883603002,
+          -0.12203408455296987
+        ],
+        "verdict": "real"
+      },
+      "reward": {
+        "mean": 0.1926101918623593,
+        "ci95": [
+          -0.055259820970107225,
+          0.4462370558644235
+        ],
+        "verdict": "could be luck"
+      }
+    },
+    "a2c vs ppo": {
+      "attacks": {
+        "mean": -1.264,
+        "ci95": [
+          -1.4679999999999997,
+          -1.062
+        ],
+        "verdict": "real"
+      },
+      "succeeded": {
+        "mean": 0.184,
+        "ci95": [
+          0.07400000000000002,
+          0.294
+        ],
+        "verdict": "real"
+      },
+      "pct_inside": {
+        "mean": 8.886666666666667,
+        "ci95": [
+          5.075555555555556,
+          13.613333333333333
+        ],
+        "verdict": "real"
+      },
+      "mutations": {
+        "mean": 2.0,
+        "ci95": [
+          1.6900000000000006,
+          2.3200000000000003
+        ],
+        "verdict": "real"
+      },
+      "disruption": {
+        "mean": -0.0006269814577698351,
+        "ci95": [
+          -0.02918960918426495,
+          0.026701296642089218
+        ],
+        "verdict": "could be luck"
+      },
+      "reward": {
+        "mean": -10.277562410267741,
+        "ci95": [
+          -17.113996001104823,
+          -5.347521807962574
+        ],
+        "verdict": "real"
+      }
+    },
+    "ppo-nofeeds vs ppo": {
+      "attacks": {
+        "mean": -0.8420000000000001,
+        "ci95": [
+          -1.024,
+          -0.662
+        ],
+        "verdict": "real"
+      },
+      "succeeded": {
+        "mean": -0.07199999999999998,
+        "ci95": [
+          -0.16799999999999998,
+          0.018049999999999303
+        ],
+        "verdict": "could be luck"
+      },
+      "pct_inside": {
+        "mean": 0.3755555555555555,
+        "ci95": [
+          0.06444444444444442,
+          0.702222222222222
+        ],
+        "verdict": "real"
+      },
+      "mutations": {
+        "mean": -1.3440000000000019,
+        "ci95": [
+          -1.7080000000000022,
+          -0.9879500000000025
+        ],
+        "verdict": "real"
+      },
+      "disruption": {
+        "mean": -0.07043049996025864,
+        "ci95": [
+          -0.09108428113597068,
+          -0.04922243462425662
+        ],
+        "verdict": "real"
+      },
+      "reward": {
+        "mean": 0.0651193598290531,
+        "ci95": [
+          -0.37132761495268596,
+          0.5069679046669731
+        ],
+        "verdict": "could be luck"
+      }
+    },
+    "ppo-nohold vs ppo": {
+      "attacks": {
+        "mean": -0.484,
+        "ci95": [
+          -0.642,
+          -0.324
+        ],
+        "verdict": "real"
+      },
+      "succeeded": {
+        "mean": 0.028000000000000004,
+        "ci95": [
+          -0.06,
+          0.11400000000000005
+        ],
+        "verdict": "could be luck"
+      },
+      "pct_inside": {
+        "mean": 0.6266666666666666,
+        "ci95": [
+          0.3311111111111111,
+          0.9311111111111109
+        ],
+        "verdict": "real"
+      },
+      "mutations": {
+        "mean": 2.0,
+        "ci95": [
+          1.6900000000000006,
+          2.3200000000000003
+        ],
+        "verdict": "real"
+      },
+      "disruption": {
+        "mean": 0.1400122431177645,
+        "ci95": [
+          0.1199887670014481,
+          0.16128694216366832
+        ],
+        "verdict": "real"
+      },
+      "reward": {
+        "mean": -0.5865131469976157,
+        "ci95": [
+          -1.0380460059106535,
+          -0.16231195063266918
+        ],
+        "verdict": "real"
+      }
+    },
     "ppo-v2-original vs ppo": {
+      "attacks": {
+        "mean": 3.412,
+        "ci95": [
+          2.8899999999999992,
+          3.9319999999999995
+        ],
+        "verdict": "real"
+      },
       "succeeded": {
         "mean": 3.4300000000000006,
         "ci95": [
@@ -501,6 +1581,14 @@
         "ci95": [
           31.715222222222224,
           40.17333333333333
+        ],
+        "verdict": "real"
+      },
+      "mutations": {
+        "mean": 2.0,
+        "ci95": [
+          1.6900000000000006,
+          2.3200000000000003
         ],
         "verdict": "real"
       },
