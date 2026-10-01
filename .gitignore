@@ -55,3 +55,6 @@ __pycache__/
 
 # host firewall blocklist cache (regenerated from AbuseIPDB)
 abuse_blocklist.json
+
+# paper build artifacts (regenerate: python paper/build_docx.py)
+paper/GhostNet_v4_IEEE.pdf
