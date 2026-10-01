@@ -1,0 +1,56 @@
+2026-10-01 19:46:26,417 [CALDERA] INFO: CALDERA server reachable at http://localhost:8888
+2026-10-01 19:46:26,424 [CALDERA] INFO: Adversary already exists: cbac9539-1ed0-455d-8fab-d3cbdf6572f4
+2026-10-01 19:46:26,433 [CALDERA] INFO: Operation started: 286a4135-d50f-4405-bc99-ddf67f76a53d
+2026-10-01 19:46:26,435 [CALDERA] INFO: Starting simulated attack kill-chain (9 TTPs)
+2026-10-01 19:46:26,435 [CALDERA] INFO: TTP activated (manual injection): T1046
+2026-10-01 19:46:28,435 [CALDERA] INFO: TTP activated (manual injection): T1190
+2026-10-01 19:46:30,436 [CALDERA] INFO: TTP activated (manual injection): T1078
+2026-10-01 19:46:32,436 [CALDERA] INFO: TTP activated (manual injection): T1021
+2026-10-01 19:46:34,437 [CALDERA] INFO: TTP activated (manual injection): T1071
+2026-10-01 19:46:36,437 [CALDERA] INFO: TTP activated (manual injection): T1041
+2026-10-01 19:46:38,438 [CALDERA] INFO: TTP activated (manual injection): T1565
+2026-10-01 19:46:40,438 [CALDERA] INFO: TTP activated (manual injection): T1486
+2026-10-01 19:46:42,438 [CALDERA] INFO: TTP activated (manual injection): T1489
+2026-10-01 19:46:44,439 [CALDERA] INFO: Kill-chain simulation complete
+2026-10-01 19:46:56,630 [CALDERA] INFO: Operation closed: 286a4135-d50f-4405-bc99-ddf67f76a53d
+
+[TEST] Starting operation...
+[TEST] Injecting kill-chain in background (2s between TTPs)...
+[TEST] Polling threat injection every 3s for 30s...
+
+  Active TTPs (2): ['T1046', 'T1190']
+  Injection vector: {1: 0.466, 8: 0.559, 6: 0.373, 11: 0.186, 2: 0.586, 0: 0.293, 5: 0.293}
+
+  Active TTPs (4): ['T1046', 'T1190', 'T1078', 'T1021']
+  Injection vector: {1: 0.734, 8: 0.522, 6: 0.348, 11: 0.174, 2: 0.546, 0: 0.511, 5: 0.273, 10: 0.334, 3: 0.499, 7: 0.3}
+
+  Active TTPs (5): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071']
+  Injection vector: {1: 0.685, 8: 0.486, 6: 0.324, 11: 0.455, 2: 0.509, 0: 0.477, 5: 0.255, 10: 0.311, 3: 0.466, 7: 0.669, 4: 0.585}
+
+  Active TTPs (7): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565']
+  Injection vector: {1: 0.639, 8: 0.454, 6: 0.302, 11: 0.424, 2: 0.761, 0: 0.445, 5: 0.238, 10: 0.29, 3: 0.734, 7: 1.0, 4: 1.0}
+
+  Active TTPs (8): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486']
+  Injection vector: {1: 1.0, 8: 0.423, 6: 0.282, 11: 0.785, 2: 1.0, 0: 0.853, 5: 0.611, 10: 0.271, 3: 1.0, 7: 1.0, 4: 1.0}
+
+  Active TTPs (9): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486', 'T1489']
+  Injection vector: {1: 0.964, 8: 0.395, 6: 0.263, 11: 1.0, 2: 1.0, 0: 0.796, 5: 0.57, 10: 0.252, 3: 1.0, 7: 1.0, 4: 1.0}
+
+  Active TTPs (9): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486', 'T1489']
+  Injection vector: {1: 0.9, 8: 0.368, 6: 0.245, 11: 0.95, 2: 0.999, 0: 0.742, 5: 0.532, 10: 0.235, 3: 1.0, 7: 0.97, 4: 1.0}
+
+  Active TTPs (9): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486', 'T1489']
+  Injection vector: {1: 0.839, 8: 0.343, 6: 0.229, 11: 0.885, 2: 0.931, 0: 0.692, 5: 0.496, 10: 0.22, 3: 1.0, 7: 0.905, 4: 1.0}
+
+  Active TTPs (9): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486', 'T1489']
+  Injection vector: {1: 0.783, 8: 0.32, 6: 0.213, 11: 0.826, 2: 0.869, 0: 0.646, 5: 0.463, 10: 0.205, 3: 1.0, 7: 0.844, 4: 1.0}
+
+  Active TTPs (9): ['T1046', 'T1190', 'T1078', 'T1021', 'T1071', 'T1041', 'T1565', 'T1486', 'T1489']
+  Injection vector: {1: 0.73, 8: 0.299, 6: 0.199, 11: 0.771, 2: 0.811, 0: 0.603, 5: 0.432, 10: 0.191, 3: 1.0, 7: 0.787, 4: 1.0}
+
+[TEST] Done.
+=== CALDERA operations on record (Thu Oct  1 19:47:13 IST 2026)
+GhostNet-Phase5-Eval | e9542c16-f926-482f-ab08-0338284c2240 | finished | Hospital-IoT-Ransomware
+GhostNet-Phase5-Eval | 286a4135-d50f-4405-bc99-ddf67f76a53d | finished | Hospital-IoT-Ransomware
+=== CALDERA version
+{"application": "Caldera", "version": "5.0.0", "access": "RED", "plugins": [{"name": "access", "description": "A toolkit containing initial access throwing modules", "enabled": true, "address": "/plugin/access/gui"}, {"name": "atomic", "description": "The collection of abilities in the Red Canary At
