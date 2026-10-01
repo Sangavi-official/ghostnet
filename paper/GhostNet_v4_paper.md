@@ -200,7 +200,9 @@ telemetry over MQTT to a Mosquitto broker on an AWS EC2 instance. A threat-state
 engine combines live threat intelligence and IDS-estimated exposure into a
 12-dimensional state vector. A single learned policy maps the state to one of seven
 actions (six mutations and hold) and dispatches it to a cloud executor (AWS SDK) or
-an IoT executor (SSH and an authenticated MQTT control channel). Each executor
+an IoT executor (an authenticated SSH session and an MQTT control channel that, in
+the deployed broker, is unauthenticated until GMCP secures it at the message layer,
+Section V-C). Each executor
 applies the mutation to live infrastructure and re-reads the target to confirm it;
 a mutation ledger records old value, new value and confirmation, supplies the
 current live configuration back to the executors, and rolls back anything
@@ -408,10 +410,14 @@ game — worse than round-robin — while the greedy rule, which never uses it, 
 unchanged at 0.88. This is a silent failure: in the nominal environment the policy
 looks excellent. Training under uncertainty about the action's effect (domain
 randomization over its strength [CITE DomainRand]) reduces the worst case to 1.29
-break-ins at a small nominal cost (0.92 vs 0.69). Across all nine perturbations we
-tested — attacker speed, exploit delay, IDS noise, firewall effect — one property
-held without exception: every learned policy disrupted the hospital less than
-greedy. <!-- robustness_v4.json -->
+break-ins at a small nominal cost (0.92 vs 0.69). The robustness sweep also surfaced
+one regime where learning helps on security: under the highest IDS noise
+(observation noise 0.20) the learned policies allowed significantly fewer break-ins
+than greedy (PPO 1.11 vs 1.44 per game, −0.33, 95% CI [−0.63, −0.05]; DQN 1.04),
+plausibly because a greedy rule chases the noisiest apparent surface while the policy
+has learned to discount the noise. Across all nine perturbations we tested — attacker
+speed, exploit delay, IDS noise, firewall effect — one property held without
+exception: every learned policy disrupted the hospital less than greedy. <!-- robustness_v4.json, logs/e22 -->
 
 **[FIGURE 2: paper/figures/fig2_robustness.png — breaches vs firewall effect.]**
 
@@ -485,8 +491,9 @@ learned policy did not stop more break-ins than a one-line heuristic but disrupt
 the hospital less; and we characterized three silent failure modes, giving a signed
 two-phase protocol that removes the availability failure. Future work will complete
 live validation of the partial actions and the host-firewall and GMCP paths on the
-deployment, replace the modeled attacker with a live adaptive red team, add exposure
-regrowth with hold/restore so mutation timing is fully learnable, and scale beyond a
+deployment, replace the modeled attacker with a live adaptive red team, add a
+restore action (the environment already models exposure regrowth and a hold action)
+so the full mutation lifecycle is learnable, and scale beyond a
 single segment and device. We also intend to make cloud-IP and API-path rotation
 live (Elastic IP and a reverse proxy) so that every action the policy can select is
 executed and confirmed on real infrastructure.
